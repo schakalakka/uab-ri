@@ -4,7 +4,7 @@
 from meetup.api import Client
 
 
-# Defining the API KEY. This belongs to my user: Martí Municoy
+# Defining the API KEY. This belongs to my user: Alba Gordó
 API_KEY = "506e773111d2617241037376029726d"
 FILE_NAME = "results.txt"
 
@@ -26,9 +26,9 @@ city = "Paris"
 
 # A simple function that writes all Meet Up activites found in the chosen city arranged by category
 with open(str(city + "_" + FILE_NAME), 'w', encoding="utf-8") as f:
-    f.write(str('#'*54) + "\n")
-    f.write("Format of the activities list: Name,Latitude,Longitude")
-    f.write("\n" + str('#'*54) + "\n\n")
+    f.write(str('#'*85) + "\n")
+    f.write("Format of the activities list: <tabulator>Name<tabulator>Latitude<tabulator>Longitude")
+    f.write("\n" + str('#'*85) + "\n\n")
     f.write("LOOKING FOR ALL THE MEET UP EVENTS IN " + str(city).upper() + ":\n\n")
     for category in categories:
         k = 0
@@ -39,7 +39,7 @@ with open(str(city + "_" + FILE_NAME), 'w', encoding="utf-8") as f:
         # Get all city's events that match with a specific category
         city_events = client.GetOpenEvents(**cities[city], category=category["id"]).results
         for event in city_events:
-            f.write(("\t" + str(event["name"]) + "," + str(event["group"]["group_lat"]) + "" + str(event["group"]["group_lat"]) + "\n"))
+            f.write(("\t" + str(event["name"]) + "\t" + str(event["group"]["group_lat"]) + "\t" + str(event["group"]["group_lat"]) + "\n"))
             k += 1
         f.write("\nTotal amount of " + str(category["name"]) + " events: " + repr(k) + "\n\n")
             
