@@ -5,7 +5,7 @@ from meetup.api import Client
 
 
 # Defining the API KEY. This belongs to my user: Martí Municoy
-API_KEY = "2ad32462336113c27181c452986c77"
+API_KEY = "506e773111d2617241037376029726d"
 FILE_NAME = "results.txt"
 
 # Initiate a Meet Up client with the API KEY
@@ -25,7 +25,7 @@ cities = {"Barcelona": {"city": "Barcelona", "country": "es"},
 city = "Paris"
 
 # A simple function that writes all Meet Up activites found in the chosen city arranged by category
-with open(str(city + "_" + FILE_NAME), 'w') as f:
+with open(str(city + "_" + FILE_NAME), 'w', encoding="utf-8") as f:
     f.write("LOOKING FOR ALL THE MEET UP EVENTS IN " + str(city).upper() + ":\n\n")
     for category in categories:
         k = 0
@@ -36,7 +36,7 @@ with open(str(city + "_" + FILE_NAME), 'w') as f:
         # Get all city's events that match with a specific category
         city_events = client.GetOpenEvents(**cities[city], category=category["id"]).results
         for event in city_events:
-            f.write("\t" + str(event["name"]) + "\n")
+            f.write(("\t" + str(event["name"]) + "\n"))
             k += 1
         f.write("\nTotal amount of " + str(category["name"]) + " events: " + repr(k) + "\n\n")
             
