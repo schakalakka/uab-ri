@@ -4,7 +4,7 @@ import requests
 
 from meetup.API_KEY import *
 
-cities = [('Barcelona', 'es'), ('Berlin', 'de'), ('Paris', 'fr'), ('Madrid', 'es'), ('Hamburg', 'de'),
+cities = [('London', 'gb'), ('Barcelona', 'es'), ('Berlin', 'de'), ('Paris', 'fr'), ('Madrid', 'es'), ('Hamburg', 'de'),
           ('New York', ('us', 'NY'))]  # list of cities with (city_name, country_code)
 
 max_elems_per_page = 200
@@ -38,6 +38,12 @@ def get_open_events_of_city(city, country_code):
 
 
 def filter_location_for_coordinates(data):
+    """
+    filters all the events for location
+    events with lon/lat = 0/0 will be removed
+    :param data:
+    :return: list of coordinate tuples and number of events without location
+    """
     lat_lon_data = []
     number_events_without_location = 0
     for elem in data:
@@ -53,15 +59,10 @@ def filter_location_for_coordinates(data):
     return lat_lon_data, number_events_without_location
 
 
-def write_locations(city, locations):
-    with open('{}.csv'.format(city), 'w') as f:
+def write_locations(city, locations, category=''):
+    with open('{}{}.csv'.format(city, category), 'w') as f:
         csvwriter = csv.writer(f, delimiter=';')
         csvwriter.writerows(locations)
-
-
-def write_all_locations(data):
-    for city, locations in data.items():
-        write_locations(city, locations)
 
 
 events_per_city = {}
