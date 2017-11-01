@@ -8,10 +8,15 @@ with open('Arbeitsmappe1.csv', 'r') as f:
 print((my_data[0][0]))
 # print(len(my_data[0]))
 
+float_my_data = [(float(e[0]), float(e[1])) for e in my_data]
+
 for element in my_data:
+
     for x in element:
         print(type(x))
-#        float(x)
+        # float(x)
+
+print(float_my_data)
 
 #list(map(float,my_data[0][0]))
 
