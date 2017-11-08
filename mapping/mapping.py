@@ -120,10 +120,8 @@ def map_activities(city, categories, color_pattern=None):
     ----------
     city : string
         Name of the city whose activities we want to map.
-    categories : list of dictionary elements
-        Each dictionary elements belong to a category and describe information
-        about it. For instance, 'id' key returns its id and 'name' key returns
-        its label.
+    categories : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
 
     Returns
     -------
@@ -135,7 +133,7 @@ def map_activities(city, categories, color_pattern=None):
 
     # Calculate activities density for the chosen city
     locations, num_activities = read_csv_by_category(
-        './csv/{}.csv'.format(city), [i['id'] for i in categories])
+        './csv/{}.csv'.format(city), [i for i in categories])
     sq1 = max([i[0] for i in locations])
     sq2 = max([i[1] for i in locations])
     sq3 = min([i[0] for i in locations])
@@ -145,11 +143,9 @@ def map_activities(city, categories, color_pattern=None):
 
     # Apply a diffenent color pattern for every layer by using a counter
     counter = 0
-    for category in categories:
-        category_id = (category['id'],)
-        category_label = category['name']
+    for category_id, category_label in categories.items():
         locations, num_activities = read_csv_by_category(
-            './csv/{}.csv'.format(city), category_id)
+            './csv/{}.csv'.format(city), [i for i in categories])
         if(len(locations) == 0):
             print("No activities were found in " +
                   "{} matching category: {}".format(city, category_label))
@@ -165,3 +161,26 @@ def map_activities(city, categories, color_pattern=None):
         counter = cyclic_iteration(counter, len(co.COLOR_GRADIENTS) - 1)
 
     return my_map
+
+
+def categories_parser(categories):
+    """
+    It creates a dictionary by parsing the JSON format coming from the MeetUp
+    Client.
+
+    Parameters
+    ----------
+    categories : JSON formatted list
+        This JSON formated list contains all the available categories.
+
+    Returns
+    -------
+    categories_parsed : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
+    """
+    categories_parsed = {}
+    for category in categories:
+        id = category["id"]
+        label = category["name"]
+        categories_parsed[id] = label
+    return categories_parsed

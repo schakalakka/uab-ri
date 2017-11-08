@@ -2,6 +2,7 @@ from time import sleep
 import csv
 import requests
 import sys
+import os
 
 max_elems_per_page = 200
 offset = 0
@@ -77,7 +78,7 @@ def get_categories():
         return get_categories()
 
 
-def get_open_events_of_city(city, code_list, category=None):
+def get_open_events_of_city(city, code_list, category_id=None):
     """
     It returns a list of all the available MeetUp events in a city.
 
@@ -90,7 +91,7 @@ def get_open_events_of_city(city, code_list, category=None):
         to. In case of cities from United States, a state code is also
         mandatory. Then, code_list is defined as a list of strings made up of
         the country code and the state code.
-    category : integer
+    category_id : integer
         It is the id that defines a MeetUp category. If it is given, the
         functino will only return events related with this category. If it is
         not given, the function will return all the events without filtering
@@ -108,8 +109,8 @@ def get_open_events_of_city(city, code_list, category=None):
         params['state'] = code_list[1]
     else:
         params['country'] = code_list
-    if category is not None:
-        params['category'] = category
+    if category_id is not None:
+        params['category'] = category_id
 
     # Declaring some initial variable before the loop
     number_results = max_elems_per_page
@@ -125,8 +126,7 @@ def get_open_events_of_city(city, code_list, category=None):
         offset += 1
 
         # To avoid throttling the client
-        if offset%10 == 0:
-            sleep(1)
+        sleep(1)
 
     return results
 
@@ -221,3 +221,35 @@ def write_locations(city, locations, f=None, category_id=None):
         csvwriter.writerows(locations)
         if category_id is not None:
             f.write("!#\n")
+
+
+def city_events_by_category(city, code_list, categories):
+    """
+    It retrieves all the events of a city and arrange them by their categories.
+    Then, it writes down a custom csv file with this data.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city.
+    code_list : either string or list of strings
+        It is a string that contains the country code where the city belongs
+        to. In case of cities from United States, a state code is also
+        mandatory. Then, code_list is defined as a list of strings made up of
+        the country code and the state code.
+    categories : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
+    """
+    print("Searching for all the events in {}".format(city))
+    filename = "./csv/{}.csv".format(city)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, 'w') as f:
+        num_activities = 0
+        for category_id, category_label in categories.items():
+            results = get_open_events_of_city(city, code_list,
+                category_id=category_id)
+            data, no_events_wo_loc = filter_location_for_coordinates(results)
+            num_activities += len(data)
+            write_locations(city, data, f, category_id)
+        write_num_activities(city, num_activities, f)
+    print("Saved a custom csv file saved in \'{}\'".format(filename))
