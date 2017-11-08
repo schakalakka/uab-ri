@@ -111,7 +111,7 @@ def cyclic_iteration(current_position, top):
         return 0
 
 
-def map_activities(city, categories, color_pattern=None):
+def map_activities(city, categories, color_pattern=None, max_intensity=None):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -122,6 +122,11 @@ def map_activities(city, categories, color_pattern=None):
         Name of the city whose activities we want to map.
     categories : dictionary of categories
         This dictionary has category ids as keys and category labels as items.
+    color_pattern : string
+        A string that defines which color pattern will be used in the plot.
+        More information about these patterns in the constants.py file.
+    max_intensity : float
+        A value that sets the maximum intensity for the heat map.
 
     Returns
     -------
@@ -139,7 +144,11 @@ def map_activities(city, categories, color_pattern=None):
     sq3 = min([i[0] for i in locations])
     sq4 = min([i[1] for i in locations])
     area = sq1 * sq2 * sq3 * sq4
-    density = num_activities / float(area * co.POINT_RADIUS)
+    density = (36. * num_activities) / float(
+        area * co.POINT_RADIUS * len(categories))
+
+    if max_intensity is None:
+        max_intensity = density
 
     # Apply a diffenent color pattern for every layer by using a counter
     counter = 0
@@ -152,13 +161,20 @@ def map_activities(city, categories, color_pattern=None):
             continue
         layer = gmaps.heatmap_layer(locations)
         if color_pattern is None:
-            layer.gradient = co.COLOR_GRADIENTS[counter]
+            for index, item in enumerate(co.COLOR_GRADIENTS.values()):
+                if index == counter:
+                    layer.gradient = item
+                    break
         else:
-            layer.gradient = co.COLOR_GRADIENTS[color_pattern]
-        layer.max_intensity = density
+            try:
+                layer.gradient = co.COLOR_GRADIENTS[color_pattern]
+            except KeyError:
+                print("Wrong color pattern parameter. More information in " +
+                    "the constants.py file")
+        layer.max_intensity = max_intensity
         layer.point_radius = co.POINT_RADIUS
         my_map.add_layer(layer)
-        counter = cyclic_iteration(counter, len(co.COLOR_GRADIENTS) - 1)
+        counter = cyclic_iteration(counter, len(co.COLOR_GRADIENTS) - 2)
 
     return my_map
 
@@ -184,3 +200,31 @@ def categories_parser(categories):
         label = category["name"]
         categories_parsed[id] = label
     return categories_parsed
+
+
+def get_categories_subset(categories, labels):
+    """
+    It returns a subset of the categories dictionary depending on the category
+    labels submitted.
+
+    Parameters
+    ----------
+    categories : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
+    labels : either a string or a list of strings
+        It contains the label or a list of the labels whose ids we want to get.
+
+    Returns
+    -------
+    categories_subset : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
+        It is a subset of the submitted categories dictionary.
+    """
+    categories_subset = {}
+    if (type(labels) is not list) and (type(labels) is not tuple):
+        labels = [labels,]
+    for label in labels:
+        for category_id, category_label in categories.items():
+            if category_label == label:
+                categories_subset[category_id] = category_label
+    return categories_subset
