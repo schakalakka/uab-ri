@@ -101,6 +101,7 @@ def get_open_events_of_city(city, code_list, category=None):
     results : JSON formatted list
         It includes information about the events found in a city.
     """
+    # Defining initial parameters to call MeetUp API
     params['city'] = city
     if type(code_list) is tuple:
         params['country'] = code_list[0]
@@ -109,20 +110,24 @@ def get_open_events_of_city(city, code_list, category=None):
         params['country'] = code_list
     if category is not None:
         params['category'] = category
+
+    # Declaring some initial variable before the loop
     number_results = max_elems_per_page
     results = []
-    offset = -1
-    while max_elems_per_page <= number_results:
-        offset += 1
+    offset = 0
+
+    # Entering into the loop to retrieve all events in the city
+    while (number_results != 0):
         params['offset'] = offset
         data = get_open_events()
-        try:
-            number_results = data['meta']['count']
-            results.extend(data['results'])
-        except KeyError:
-            print(data)
+        number_results = data['meta']['count']
+        results.extend(data['results'])
+        offset += 1
+
         # To avoid throttling the client
-        sleep(1)
+        if offset%10 == 0:
+            sleep(1)
+
     return results
 
 
