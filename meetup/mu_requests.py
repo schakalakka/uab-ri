@@ -1,12 +1,12 @@
 from time import sleep
-import csv
 import requests
 import sys
 import os
+# from datetime import datetime
+from .cities import cities
 
 max_elems_per_page = 200
-offset = 0
-params = {'sign': 'true', 'page': max_elems_per_page, 'offset': offset}
+params = {'sign': 'true', 'page': max_elems_per_page}
 
 
 def add_key(mu_key):
@@ -40,7 +40,12 @@ def get_open_events():
     try:
         json = r.json()
         if 'code' in json:
-            print(" Client throttled, use another key or try it again later")
+            if "key" in params:
+                print(" Client throttled, " +
+                      "use another key or try it again later")
+            else:
+                print("MeetUp key required. Add it by calling add_key() " +
+                      "function")
             sys.exit(0)
         return json
     except Exception:
@@ -69,7 +74,12 @@ def get_categories():
     try:
         json = r.json()
         if 'code' in json:
-            print(" Client throttled, use another key or try it again later")
+            if "key" in params:
+                print(" Client throttled, " +
+                      "use another key or try it again later")
+            else:
+                print("MeetUp key required. Add it by calling add_key() " +
+                      "function")
             sys.exit(0)
         categories.extend(json['results'])
         return categories
@@ -131,37 +141,72 @@ def get_open_events_of_city(city, code_list, category_id=None):
     return results
 
 
-def filter_location_for_coordinates(data):
+def data_parser(data, write_date, write_name, write_id):
     """
-    It filters all the events according to their location. Events with lon/lat
-    equal to 0/0 will be removed.
+    It parses the JSON formatted data in a custom format containing only the
+    required data.
 
     Parameters
     ----------
     data : JSON formatted list
         It includes general information about some events.
+    write_date : boolean
+        When set to true, it will write down the information about the event
+        dates to the csv file.
+    write_name : boolean
+        When set to true, it will write down the name for each event to the csv
+        file.
+    write_id : boolean
+        When set to true, it will write down the id for each event to the csv
+        file.
 
     Returns
     -------
-    lat_lon_data : list of coordinate tuples
-        It consists on the latitude and longitude coordinates of each activity
-        from the input.
-    number_events_without_location : integer
-        Number of events with lon/lat equal to 0/0 that were filtered.
+    parsed_events : list of dictionaries
+        Parent list contains different events. Dictionaries contain the parsed
+        data with the following format:
+            keys:   ["coordinates", "date", "name", "event_id"]
+            values: [2-dim tuple of floats, integer, string, string]
     """
-    lat_lon_data = []
-    number_events_without_location = 0
-    for elem in data:
-        if elem.get('venue'):
-            lat = elem.get('venue')['lat']
-            lon = elem.get('venue')['lon']
-            # filter (0,0) locations
-            if lat == lon == 0:
-                continue
-            lat_lon_data.append((lat, lon))
-        else:
-            number_events_without_location += 1
-    return lat_lon_data, number_events_without_location
+    parsed_events = []
+    for event in data:
+        # Initial values
+        event_coordinates = (None, None)
+        event_date = None
+        event_name = None
+        event_id = None
+        parsed_data = {}
+
+        # Retrieving latitude and longitude if possible
+        if event.get("venue"):
+            event_coordinates = (event.get("venue")["lat"],
+                                 event.get("venue")["lon"])
+            if event_coordinates is (0, 0):
+                event_coordinates = (None, None)
+
+        # Retrieving date
+        if write_date:
+            # event_date = datetime.fromtimestamp(event.get("time") / 1000)
+            event_date = event.get("time")
+
+        # Retrieving description
+        if write_name:
+            event_name = event.get("name")
+            # Remove semicolons, they would produce interpretation errors when
+            # read from file
+            event_name = event_name.replace(';', '')
+
+        if write_id:
+            event_id = event.get("id")
+
+        # Save data
+        parsed_data["coordinates"] = event_coordinates
+        parsed_data["date"] = event_date
+        parsed_data["name"] = event_name
+        parsed_data["id"] = event_id
+        parsed_events.append(parsed_data)
+
+    return parsed_events
 
 
 def write_num_activities(city, num_activities, f=None):
@@ -186,52 +231,78 @@ def write_num_activities(city, num_activities, f=None):
         f.write("#0\n{}\n!#\n".format(num_activities))
 
 
-def write_locations(city, locations, f=None, category_id=None):
+def write_data(city, parsed_data, category_id, f):
     """
-    It writes down the locations for each one of the activities that were found
-    in a city to an output csv file.
+    It writes down the parsed data for each one of the activities that were
+    found in a city to an output csv file.
 
     Parameters
     ----------
     city : string
         Name of the city.
-    locations : list of coordinate tuples
+    parsed_data : list of coordinate tuples
         It consists on the latitude and longitude coordinates of each activity
         found.
-    f : file object
-        This is the object belonging to the file that was opened. If it is not
-        given, a file will be opened according to the city name.
     category_id : integer
         It is the category id where all the activities from the locations data
         belong to. If it is not given, no information about the category will
         be written.
+    f : file object
+        This is the object belonging to the file that was opened.
+    parsed_data : list of dictionaries
+        Parent list contains different events. Dictionaries contain the parsed
+        data with the following format:
+            keys:   ["coordinates", "date", "name", "event_id"]
+            values: [2-dim tuple of floats, integer, string, string]
     """
-    if f is None:
-        with open('{}.csv'.format(city), 'w') as f:
-            csvwriter = csv.writer(f, delimiter=';')
-            if category_id is not None:
-                f.write("#{}\n".format(category_id))
-            csvwriter.writerows(locations)
-            if category_id is not None:
-                f.write("!#\n")
-    else:
-        csvwriter = csv.writer(f, delimiter=';')
-        if category_id is not None:
-            f.write("#{}\n".format(category_id))
-        csvwriter.writerows(locations)
-        if category_id is not None:
-            f.write("!#\n")
+    for event in parsed_data:
+        f.write("#{}\n".format(category_id))
+        f.write("{};{};{};{};{}\n".format(event["coordinates"][0],
+                                          event["coordinates"][1],
+                                          event["date"], event["name"],
+                                          event["id"]))
+        f.write("!#\n")
 
 
-def city_events_by_category(city, code_list, categories):
+def categories_parser(categories):
+    """
+    It creates a dictionary by parsing the JSON format coming from the MeetUp
+    Client.
+
+    Parameters
+    ----------
+    categories : JSON formatted list
+        This JSON formated list contains all the available categories.
+
+    Returns
+    -------
+    categories_parsed : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
+    """
+    categories_parsed = {}
+    for category in categories:
+        id = category["id"]
+        label = category["name"]
+        categories_parsed[id] = label
+    return categories_parsed
+
+
+def get_and_save_city_events(city, filename="./csv/{}.csv", code_list=None,
+                             categories=None, write_date=True, write_name=True,
+                             write_id=True):
     """
     It retrieves all the events of a city and arrange them by their categories.
-    Then, it writes down a custom csv file with this data.
+    It can also retrieve information about the date and the description of the
+    events. Then, it writes down a custom csv file with this data.
 
     Parameters
     ----------
     city : string
         Name of the city.
+    filename : string
+        It tells the directory where to search for the custom csv file. If it
+        does not exist, a new file will be created with the directory specified
+        in this filename variable.
     code_list : either string or list of strings
         It is a string that contains the country code where the city belongs
         to. In case of cities from United States, a state code is also
@@ -239,17 +310,39 @@ def city_events_by_category(city, code_list, categories):
         the country code and the state code.
     categories : dictionary of categories
         This dictionary has category ids as keys and category labels as items.
+    write_date : boolean
+        When set to true, it will write down the information about the event
+        dates to the csv file.
+    write_name : boolean
+        When set to true, it will write down the name for each event to the csv
+        file.
+    write_id : boolean
+        When set to true, it will write down the id for each event to the csv
+        file.
     """
+    # Retrieve the required information if not given in the parameters input
+    if code_list is None:
+        if city in cities:
+            code_list = cities[city]
+        else:
+            print("{} is not in the cities list. A code_list for this city" +
+                  "must be specified in the function parameters")
+            sys.exit(0)
+    if categories is None:
+        categories = categories_parser(get_categories())
+
+    # Start data request
     print("Searching for all the events in {}".format(city))
-    filename = "./csv/{}.csv".format(city)
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, 'w') as f:
+    os.makedirs(os.path.dirname(filename.format(city)), exist_ok=True)
+    with open(filename.format(city), 'w') as f:
         num_activities = 0
         for category_id, category_label in categories.items():
             results = get_open_events_of_city(city, code_list,
-                category_id=category_id)
-            data, no_events_wo_loc = filter_location_for_coordinates(results)
-            num_activities += len(data)
-            write_locations(city, data, f, category_id)
+                                              category_id=category_id)
+            parsed_data = data_parser(results, write_date, write_name,
+                                      write_id)
+            num_activities += len(parsed_data)
+            write_data(city, parsed_data, category_id, f)
         write_num_activities(city, num_activities, f)
-    print("Saved a custom csv file saved in \'{}\'".format(filename))
+    print("Saved a custom csv file saved in" +
+          "\'{}\'".format(filename.format(city)))

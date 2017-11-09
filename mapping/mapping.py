@@ -1,48 +1,64 @@
 # Import custom constants
 from . import constants as co
 
-# Import csv Package
-import csv
-
 # Import GMaps Package
 import gmaps
 
+# Import default libraries
+import sys
 
-def read_csv(filename):
+# Import mu_requests functions
+"""
+Be aware that here we are importing a module that is in a top level. First we
+need to add './..' directory to the system path. This is done in the
+__init__.py file.
+"""
+from meetup.mu_requests import add_key, params, get_categories, categories_parser
+from my_keys import MU_KEY
+
+
+def line_parser(line):
     """
-    It reads a csv file with only event locations
+    It parses the input line into a dictionary that contains all the
+    information about each event.
 
     Parameters
     ----------
-    filename : string
-        It tells the directory where to search for the custom csv file.
+    line : string
+        It contains the information of an event read from a custom csv file.
 
     Returns
     -------
-    float_my_data : list of two dimentional tuples
-        These tuples are made up of the longitude and latitude for each of the
-        activities that have been found.
+    parsed_line : dictionary
+        Dictionary that contains the parsed data with the following format:
+            keys:   ["coordinates", "date", "name", "event_id"]
+            values: [2-dim tuple of floats, integer, string, string]
     """
-    with open(filename, 'r') as f:
-        my_data = [tuple(line) for line in csv.reader(f, delimiter=';')]
-        float_my_data = [(float(e[0]), float(e[1])) for e in my_data]
-        return float_my_data
+    parsed_line = {}
+    splitted_line = line.split(";")
+    keys = ["latitude", "longitude", "date", "name", "event_id"]
+    if len(splitted_line) != len(keys):
+        print("Error while parsing line:\n {}".format(line))
+        sys.exit(0)
+    for i, value in enumerate(splitted_line):
+        parsed_line[keys[i]] = value
+    return parsed_line
 
 
-def read_csv_by_category(filename, category_list):
+def read_custom_csv(filename, category_list):
     """
-    This function reads a custom csv file containing a list of coordinates
-    of all the activities that were found in a city. These coordinates are
+    This function reads a custom csv file containing a list of information
+    about all the activities that were found in a city. These coordinates are
     arranged by the category they belong to. Each category has a specific
     category id which is an integer that, currently, goes from 1 to 36 (this
     could change as it depends on whether they add more categories or not).
     The format of this input file is the following:
-        #1          indicates the category id where the activities' coordinates
-                    from below belong to.
-        0.0;0.0     the corresponding coordinates go here
-        ...         more coordinates belonging to the same category
-        0.0;0.0     more coordinates belonging to the same category
-        !#          end of the coordinates which belong to the category 1.
+        #1          indicates the category id where the activities' from below
+                    belong to.
+        0.0;0.0;... the corresponding information about an event goes here
+        ...         information about the other events
+        0.0;0.0;... information about another event
+        !#          end of the events that belong to the category 1.
     Additionally, the total number of activities that were found in that city
     can be obtained as indicated below:
         #0          this zero does not belong to any category id. It tells us
@@ -56,19 +72,21 @@ def read_csv_by_category(filename, category_list):
     filename : string
         It tells the directory where to search for the custom csv file.
     category_list : list of integers
-        These are describe all the category ids whose activities we want to
-        search for in the file.
+        These describe all the category ids whose activities we want to search
+        for in the file.
 
     Returns
     -------
-    data : list of two dimentional tuples
-        These tuples are made up of the longitude and latitude for each of the
-        activities that have been found.
-    num_activities : integer
+    parsed_events : list of dictionaries
+        Parent list contains different events. Dictionaries contain the parsed
+        data with the following format:
+            keys:   ["coordinates", "date", "name", "event_id"]
+            values: [2-dim tuple of floats, integer, string, string]
+     num_activities : integer
         Total number of activities that have been found in a specific city.
 
     """
-    data = []
+    parsed_events = []
     num_activities = None
 
     with open(filename, 'r') as f:
@@ -82,10 +100,11 @@ def read_csv_by_category(filename, category_list):
                 if(category_id in category_list):
                     line = next(f)
                     while (not line.startswith("!#")):
-                        data.append(tuple([float(i) for i in line.split(";")]))
+                        parsed_event = line_parser(line)
+                        parsed_events.append(parsed_event)
                         line = next(f)
 
-    return data, num_activities
+    return parsed_events, num_activities
 
 
 def cyclic_iteration(current_position, top):
@@ -111,7 +130,8 @@ def cyclic_iteration(current_position, top):
         return 0
 
 
-def map_activities(city, categories, color_pattern=None, max_intensity=None):
+def map_activities(city, categories=None, color_pattern=None,
+                   max_intensity=None):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -136,30 +156,42 @@ def map_activities(city, categories, color_pattern=None, max_intensity=None):
     """
     my_map = gmaps.figure()
 
-    # Calculate activities density for the chosen city
-    locations, num_activities = read_csv_by_category(
-        './csv/{}.csv'.format(city), [i for i in categories])
-    sq1 = max([i[0] for i in locations])
-    sq2 = max([i[1] for i in locations])
-    sq3 = min([i[0] for i in locations])
-    sq4 = min([i[1] for i in locations])
-    area = sq1 * sq2 * sq3 * sq4
-    density = (36. * num_activities) / float(
-        area * co.POINT_RADIUS * len(categories))
+    if categories is None:
+        if 'key' not in params:
+            add_key(MU_KEY)
+        categories = categories_parser(get_categories())
+        print(categories)
 
-    if max_intensity is None:
-        max_intensity = density
+    if max_intensity < 0:
+        print("Parameter error: max_intensity must be a positive float.")
+        sys.out(0)
 
-    # Apply a diffenent color pattern for every layer by using a counter
+    # Apply a different color pattern for every layer by using a counter
     counter = 0
     for category_id, category_label in categories.items():
-        locations, num_activities = read_csv_by_category(
-            './csv/{}.csv'.format(city), [i for i in categories])
+        events_data, num_activities = read_custom_csv(
+            './csv/{}.csv'.format(city), [category_id, ])
+
+        locations = []
+
+        # Filter those events with wrong or unknown locations
+        for event in events_data:
+            latitude = event["latitude"]
+            longitude = event["longitude"]
+            if ((latitude == "None") or (longitude == "None") or
+               (latitude == 0 and longitude == 0)):
+                continue
+            else:
+                locations.append((float(event["latitude"]),
+                                 float(event["longitude"])))
+
         if(len(locations) == 0):
-            print("No activities were found in " +
+            print("No local activities were found in " +
                   "{} matching category: {}".format(city, category_label))
             continue
+
         layer = gmaps.heatmap_layer(locations)
+
         if color_pattern is None:
             for index, item in enumerate(co.COLOR_GRADIENTS.values()):
                 if index == counter:
@@ -170,39 +202,18 @@ def map_activities(city, categories, color_pattern=None, max_intensity=None):
                 layer.gradient = co.COLOR_GRADIENTS[color_pattern]
             except KeyError:
                 print("Wrong color pattern parameter. More information in " +
-                    "the constants.py file")
+                      "the constants.py file")
+
         layer.max_intensity = max_intensity
         layer.point_radius = co.POINT_RADIUS
         my_map.add_layer(layer)
+
         counter = cyclic_iteration(counter, len(co.COLOR_GRADIENTS) - 2)
 
     return my_map
 
 
-def categories_parser(categories):
-    """
-    It creates a dictionary by parsing the JSON format coming from the MeetUp
-    Client.
-
-    Parameters
-    ----------
-    categories : JSON formatted list
-        This JSON formated list contains all the available categories.
-
-    Returns
-    -------
-    categories_parsed : dictionary of categories
-        This dictionary has category ids as keys and category labels as items.
-    """
-    categories_parsed = {}
-    for category in categories:
-        id = category["id"]
-        label = category["name"]
-        categories_parsed[id] = label
-    return categories_parsed
-
-
-def get_categories_subset(categories, labels):
+def get_categories_subset(categories=None, labels=()):
     """
     It returns a subset of the categories dictionary depending on the category
     labels submitted.
@@ -221,10 +232,18 @@ def get_categories_subset(categories, labels):
         It is a subset of the submitted categories dictionary.
     """
     categories_subset = {}
+
+    if categories is None:
+        if 'key' not in params:
+            add_key(MU_KEY)
+        categories = categories_parser(get_categories())
+
     if (type(labels) is not list) and (type(labels) is not tuple):
-        labels = [labels,]
+        labels = [labels, ]
+
     for label in labels:
         for category_id, category_label in categories.items():
             if category_label == label:
                 categories_subset[category_id] = category_label
+
     return categories_subset
