@@ -27,4 +27,7 @@ COLOR_GRADIENTS = {"blue": BLUE_GRADIENT, "yellow": YELLOW_GRADIENT,
                    "red": RED_GRADIENT, "green": GREEN_GRADIENT,
                    "gray": GRAY_GRADIENT, "orange": ORANGE_GRADIENT,
                    "purple": PURPLE_GRADIENT, "cyan": CYAN_GRADIENT,
-                   "magenta": MAGENTA_GRADIENT, "default": DEFAULT_GRADIENT}
+                   "magenta": MAGENTA_GRADIENT}
+COLOR_GRADIENTS_LIST = [BLUE_GRADIENT, YELLOW_GRADIENT, RED_GRADIENT,
+                        GREEN_GRADIENT, GRAY_GRADIENT, ORANGE_GRADIENT,
+                        PURPLE_GRADIENT, CYAN_GRADIENT, MAGENTA_GRADIENT]

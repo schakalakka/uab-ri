@@ -4,6 +4,7 @@ import sys
 import os
 # from datetime import datetime
 from .cities import cities
+from .categories import categories as local_categories
 
 max_elems_per_page = 200
 params = {'sign': 'true', 'page': max_elems_per_page}
@@ -19,6 +20,14 @@ def add_key(mu_key):
         This is the MeetUp API key
     """
     params['key'] = mu_key
+
+
+def restore_meetup_params():
+    """
+    """
+    global params
+    mu_key = params["key"]
+    params = {'sign': 'true', 'page': max_elems_per_page, 'key': mu_key}
 
 
 def get_open_events():
@@ -138,6 +147,9 @@ def get_open_events_of_city(city, code_list, category_id=None):
         # To avoid throttling the client
         sleep(1)
 
+    # The parameters dictionary must be restored to its initial state
+    restore_meetup_params()
+
     return results
 
 
@@ -255,13 +267,13 @@ def write_data(city, parsed_data, category_id, f):
             keys:   ["coordinates", "date", "name", "event_id"]
             values: [2-dim tuple of floats, integer, string, string]
     """
+    f.write("#{}\n".format(category_id))
     for event in parsed_data:
-        f.write("#{}\n".format(category_id))
         f.write("{};{};{};{};{}\n".format(event["coordinates"][0],
                                           event["coordinates"][1],
                                           event["date"], event["name"],
                                           event["id"]))
-        f.write("!#\n")
+    f.write("!#\n")
 
 
 def categories_parser(categories):
@@ -290,7 +302,7 @@ def categories_parser(categories):
 def get_and_save_city_events(city, filename="./csv/{}.csv", code_list=None,
                              categories=None, write_date=True, write_name=True,
                              write_id=True):
-    """
+    """'r'
     It retrieves all the events of a city and arrange them by their categories.
     It can also retrieve information about the date and the description of the
     events. Then, it writes down a custom csv file with this data.
@@ -328,8 +340,9 @@ def get_and_save_city_events(city, filename="./csv/{}.csv", code_list=None,
             print("{} is not in the cities list. A code_list for this city" +
                   "must be specified in the function parameters")
             sys.exit(0)
+
     if categories is None:
-        categories = categories_parser(get_categories())
+        categories = local_categories
 
     # Start data request
     print("Searching for all the events in {}".format(city))
@@ -344,5 +357,6 @@ def get_and_save_city_events(city, filename="./csv/{}.csv", code_list=None,
             num_activities += len(parsed_data)
             write_data(city, parsed_data, category_id, f)
         write_num_activities(city, num_activities, f)
+
     print("Saved a custom csv file saved in" +
           "\'{}\'".format(filename.format(city)))

@@ -7,14 +7,13 @@ import gmaps
 # Import default libraries
 import sys
 
-# Import mu_requests functions
+# Import mu_requests functions and MeetUp Key from local files
 """
 Be aware that here we are importing a module that is in a top level. First we
 need to add './..' directory to the system path. This is done in the
 __init__.py file.
 """
-from meetup.mu_requests import add_key, params, get_categories, categories_parser
-from my_keys import MU_KEY
+from meetup.categories import categories as local_categories
 
 
 def line_parser(line):
@@ -130,8 +129,52 @@ def cyclic_iteration(current_position, top):
         return 0
 
 
-def map_activities(city, categories=None, color_pattern=None,
-                   max_intensity=None):
+def color_patterns_parser(color_patterns):
+    """
+    This function parses the color patterns input.
+
+    Parameters
+    ----------
+    color_patterns : either a string or a list of strings
+        A string that defines which color pattern will be used in the plot. If
+        a color pattern is defined for each category, they will be colored
+        according to this list. More information about these patterns in the
+        constants.py file.
+
+    Returns
+    -------
+    color_patterns_parser : list of lists
+        A list of lists. Each child list contains information about one color
+        pattern.
+    """
+    parsed_color_patterns = []
+    if color_patterns is None:
+        parsed_color_patterns = co.COLOR_GRADIENTS_LIST
+
+    elif color_patterns == "default":
+        parsed_color_patterns.append(co.DEFAULT_GRADIENT)
+
+    elif ((type(color_patterns) is not list) and
+          (type(color_patterns) is not tuple)):
+        try:
+            parsed_color_patterns.append(co.COLOR_GRADIENTS[color_patterns])
+        except KeyError:
+            print("Wrong color pattern parameter. More information " +
+                  "in the constants.py file")
+
+    else:
+        for color in color_patterns:
+            try:
+                parsed_color_patterns.append(co.COLOR_GRADIENTS[color])
+            except KeyError:
+                print("Wrong color pattern \'{}\' parameter. ".format(color) +
+                      "More information in the constants.py file")
+
+    return parsed_color_patterns
+
+
+def map_activities(city, categories=None, color_patterns=None,
+                   max_intensity=1):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -142,9 +185,11 @@ def map_activities(city, categories=None, color_pattern=None,
         Name of the city whose activities we want to map.
     categories : dictionary of categories
         This dictionary has category ids as keys and category labels as items.
-    color_pattern : string
-        A string that defines which color pattern will be used in the plot.
-        More information about these patterns in the constants.py file.
+    color_patterns : either a string or a list of strings
+        A string that defines which color pattern will be used in the plot. If
+        a color pattern is defined for each category, they will be colored
+        according to this list. More information about these patterns in the
+        constants.py file.
     max_intensity : float
         A value that sets the maximum intensity for the heat map.
 
@@ -156,18 +201,19 @@ def map_activities(city, categories=None, color_pattern=None,
     """
     my_map = gmaps.figure()
 
+    # Define initial variables, if needed
     if categories is None:
-        if 'key' not in params:
-            add_key(MU_KEY)
-        categories = categories_parser(get_categories())
-        print(categories)
+        categories = local_categories
 
     if max_intensity < 0:
         print("Parameter error: max_intensity must be a positive float.")
         sys.out(0)
 
+    parsed_color_patterns = color_patterns_parser(color_patterns)
+
     # Apply a different color pattern for every layer by using a counter
     counter = 0
+
     for category_id, category_label in categories.items():
         events_data, num_activities = read_custom_csv(
             './csv/{}.csv'.format(city), [category_id, ])
@@ -179,7 +225,7 @@ def map_activities(city, categories=None, color_pattern=None,
             latitude = event["latitude"]
             longitude = event["longitude"]
             if ((latitude == "None") or (longitude == "None") or
-               (latitude == 0 and longitude == 0)):
+               (latitude == "0" and longitude == "0")):
                 continue
             else:
                 locations.append((float(event["latitude"]),
@@ -192,38 +238,28 @@ def map_activities(city, categories=None, color_pattern=None,
 
         layer = gmaps.heatmap_layer(locations)
 
-        if color_pattern is None:
-            for index, item in enumerate(co.COLOR_GRADIENTS.values()):
-                if index == counter:
-                    layer.gradient = item
-                    break
-        else:
-            try:
-                layer.gradient = co.COLOR_GRADIENTS[color_pattern]
-            except KeyError:
-                print("Wrong color pattern parameter. More information in " +
-                      "the constants.py file")
+        layer.gradient = parsed_color_patterns[counter]
 
         layer.max_intensity = max_intensity
         layer.point_radius = co.POINT_RADIUS
         my_map.add_layer(layer)
 
-        counter = cyclic_iteration(counter, len(co.COLOR_GRADIENTS) - 2)
+        counter = cyclic_iteration(counter, len(parsed_color_patterns) - 1)
 
     return my_map
 
 
-def get_categories_subset(categories=None, labels=()):
+def get_categories_subset(labels=(), categories=None):
     """
     It returns a subset of the categories dictionary depending on the category
     labels submitted.
 
     Parameters
     ----------
-    categories : dictionary of categories
-        This dictionary has category ids as keys and category labels as items.
     labels : either a string or a list of strings
         It contains the label or a list of the labels whose ids we want to get.
+    categories : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
 
     Returns
     -------
@@ -234,16 +270,26 @@ def get_categories_subset(categories=None, labels=()):
     categories_subset = {}
 
     if categories is None:
-        if 'key' not in params:
-            add_key(MU_KEY)
-        categories = categories_parser(get_categories())
+        categories = local_categories
 
     if (type(labels) is not list) and (type(labels) is not tuple):
         labels = [labels, ]
+
+    not_found = []
 
     for label in labels:
         for category_id, category_label in categories.items():
             if category_label == label:
                 categories_subset[category_id] = category_label
+                break
+        else:
+            not_found.append(label)
+
+    for label in not_found:
+        print("Category label \'{}\' was not found in ".format(label) +
+              "MeetUp categories list.")
+
+    if len(categories_subset) == 0:
+        print("Warning: the categories subset created is empty.")
 
     return categories_subset
