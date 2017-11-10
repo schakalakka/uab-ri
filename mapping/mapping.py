@@ -6,6 +6,7 @@ import gmaps
 
 # Import default libraries
 import sys
+from datetime import datetime
 
 # Import mu_requests functions and MeetUp Key from local files
 """
@@ -173,8 +174,136 @@ def color_patterns_parser(color_patterns):
     return parsed_color_patterns
 
 
-def map_activities(city, categories=None, color_patterns=None,
-                   max_intensity=1):
+def get_datetime_object(year=None, month=None, day=None, hour=None,
+                        minut=None, second=None):
+    """
+    This function creates a new datetime object by calling datetime() method.
+
+    Parameters
+    ----------
+    year : integer
+        It specifies the year.
+    month : integer
+        It specifies the month.
+    day : integer
+        It specifies the day.
+    hour : integer
+        It specifies the hour.
+    minut : integer
+        It specifies the minut.
+    second : integer
+        It specifies the second.
+    """
+    now = datetime.now()
+    if year is None:
+        year = now.year
+    if month is None:
+        month = now.month
+    if day is None:
+        day = now.day
+    if hour is None:
+        hour = 0
+    if minut is None:
+        minut = 0
+    if second is None:
+        second = 0
+
+    return datetime(year, month, day, hour, minut, second)
+
+
+def datetime_parser(datetime_list):
+    """
+    It parses a list of datetime objects. The output is a list of 2-dimensional
+    tuples. Each tuple defines a time interval.
+
+    Parameters
+    ----------
+    datetime_list : list of arranged timetable objects
+        It contains the list of timetable objects given as input. If they come
+        separated by single commas they will be treated separately. In this
+        case, the time interval will be defined by using the current date as
+        the other limit for the time interval. If hours are given in pairs of
+        two by using 2-dimensional tuples or lists, each pair will be used to
+        describe a time interval itself.
+
+    Returns
+    -------
+    parsed_datetime : list of 2-dimensional tuples
+        Tuples contain the limits for the time intervals expressed by datetime
+        objects.
+    """
+    now = datetime.now().replace(microsecond=0)
+    parsed_datetime = []
+
+    for datetime_object in datetime_list:
+
+        if ((type(datetime_object) is not list) and
+           (type(datetime_object) is not tuple)):
+
+            if datetime_object < now:
+                parsed_datetime.append((datetime_object, now))
+
+            else:
+                parsed_datetime.append((now, datetime_object))
+        else:
+            if datetime_object[0] > datetime_object[1]:
+                parsed_datetime.append((datetime_object[1],
+                                       datetime_object[0]))
+
+            else:
+                parsed_datetime.append((datetime_object[0],
+                                       datetime_object[1]))
+
+    return parsed_datetime
+
+
+def locations_parser(data, time_interval=None):
+    """
+    It retrieves the right locations from events data, according to the filters
+    supplied, and parses them.
+
+    Parameters
+    ----------
+    data : list of dictionaries
+        Parent list contains different events. Dictionaries contain the parsed
+        data with the following format:
+            keys:   ["coordinates", "date", "name", "event_id"]
+            values: [2-dim tuple of floats, integer, string, string]
+    time_interval : 2-dimensional tuple
+        Contain the limits of the time interval where we want to search for
+        events.
+
+    Returns
+    -------
+    parsed_locations : list of 2-dimensional tuples
+        Each tuple contain the latitude and the longitude of the location for
+        each event.
+    """
+    parsed_locations = []
+
+    for event in data:
+        event_date = datetime.fromtimestamp(int(event.get("date")) / 1000)
+        if time_interval is not None:
+            if ((time_interval[0] > event_date) or
+               (event_date > time_interval[1])):
+                continue
+
+        latitude = event.get("latitude")
+        longitude = event.get("longitude")
+
+        if ((latitude == "None") or (longitude == "None") or
+           (latitude == "0" and longitude == "0")):
+            continue
+
+        else:
+            parsed_locations.append((float(event["latitude"]),
+                                    float(event["longitude"])))
+
+    return parsed_locations
+
+
+def map_activities(city, categories=None, time_intervals=None,
+                   color_patterns=None, max_intensity=1):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -185,6 +314,10 @@ def map_activities(city, categories=None, color_patterns=None,
         Name of the city whose activities we want to map.
     categories : dictionary of categories
         This dictionary has category ids as keys and category labels as items.
+    time_intervals : either a datetime object or a list of datetime objects
+        Each datetime object describes either both limits of a time interval or
+        just one. In this last case, the time interval is calculated by using
+        the current time as the other limit of the timer interval.
     color_patterns : either a string or a list of strings
         A string that defines which color pattern will be used in the plot. If
         a color pattern is defined for each category, they will be colored
@@ -214,26 +347,30 @@ def map_activities(city, categories=None, color_patterns=None,
     # Apply a different color pattern for every layer by using a counter
     counter = 0
 
-    for category_id, category_label in categories.items():
-        events_data, num_activities = read_custom_csv(
-            './csv/{}.csv'.format(city), [category_id, ])
+    # Choose an iterator depending on the filter chosen in the input parameters
+    iterator = categories.items()
+    iterator_type = "category"
+    if time_intervals is not None:
+        time_intervals = datetime_parser(time_intervals)
+        iterator = enumerate(time_intervals)
+        iterator_type = "time interval"
 
-        locations = []
+    for index, value in iterator:
+        if iterator_type == "category":
+            events_data, num_activities = read_custom_csv(
+                './csv/{}.csv'.format(city), [index, ])
+            # Filter those events with wrong or unknown locations
+            locations = locations_parser(events_data)
 
-        # Filter those events with wrong or unknown locations
-        for event in events_data:
-            latitude = event["latitude"]
-            longitude = event["longitude"]
-            if ((latitude == "None") or (longitude == "None") or
-               (latitude == "0" and longitude == "0")):
-                continue
-            else:
-                locations.append((float(event["latitude"]),
-                                 float(event["longitude"])))
+        elif iterator_type == "time interval":
+            events_data, num_activities = read_custom_csv(
+                './csv/{}.csv'.format(city), [i for i in categories])
+            # Filter those events with wrong or unknown locations
+            locations = locations_parser(events_data, value)
 
         if(len(locations) == 0):
             print("No local activities were found in " +
-                  "{} matching category: {}".format(city, category_label))
+                  "{} matching {}: {}".format(city, iterator_type, value))
             continue
 
         layer = gmaps.heatmap_layer(locations)

@@ -2,7 +2,6 @@ from time import sleep
 import requests
 import sys
 import os
-# from datetime import datetime
 from .cities import cities
 from .categories import categories as local_categories
 
@@ -198,7 +197,6 @@ def data_parser(data, write_date, write_name, write_id):
 
         # Retrieving date
         if write_date:
-            # event_date = datetime.fromtimestamp(event.get("time") / 1000)
             event_date = event.get("time")
 
         # Retrieving description
