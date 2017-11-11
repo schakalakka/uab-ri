@@ -3,3 +3,10 @@ my_keys.py
 __pycache__
 .ipynb_checkpoints
 *.csv
+.idea/
+report/report.aux
+report/report.bbl
+report/report.blg
+report/report.log
+report/report.run.xml
+report/report.synctex.gz
