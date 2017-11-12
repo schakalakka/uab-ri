@@ -1,6 +1,8 @@
 # Import custom constants
 from . import constants as co
-from . import districts
+
+# Import custom district functions
+from . import districts as distr
 
 # Import GMaps Package
 import gmaps
@@ -158,7 +160,7 @@ def color_patterns_parser(color_patterns):
         parsed_color_patterns.append(co.DEFAULT_GRADIENT)
 
     elif ((type(color_patterns) is not list) and
-              (type(color_patterns) is not tuple)):
+          (type(color_patterns) is not tuple)):
         try:
             parsed_color_patterns.append(co.COLOR_GRADIENTS[color_patterns])
         except KeyError:
@@ -328,7 +330,8 @@ def map_activities(city, categories=None, time_intervals=None,
     max_intensity : float
         A value that sets the maximum intensity for the heat map.
     geojson : boolean
-        If True it uses a geojson file of city to map an additional population density layer
+        If True it uses a geojson file of city to map an additional population
+        density layer.
     Returns
     -------
     my_map : gmaps object
@@ -337,11 +340,10 @@ def map_activities(city, categories=None, time_intervals=None,
     """
     my_map = gmaps.figure()
 
-    #if geojson==True use an additional layer for the population density
+    # If geojson==True use an additional layer for the population density
     if geojson:
-        districts_layer = districts.load_districts_layer(city)
+        districts_layer = load_districts_layer(city)
         my_map.add_layer(districts_layer)
-
 
     # Define initial variables, if needed
     if categories is None:
@@ -359,6 +361,7 @@ def map_activities(city, categories=None, time_intervals=None,
     # Choose an iterator depending on the filter chosen in the input parameters
     iterator = categories.items()
     iterator_type = "category"
+
     if time_intervals is not None:
         time_intervals = datetime_parser(time_intervals)
         iterator = enumerate(time_intervals)
@@ -381,7 +384,6 @@ def map_activities(city, categories=None, time_intervals=None,
             print("No local activities were found in " +
                   "{} matching {}: {}".format(city, iterator_type, value))
             continue
-
 
         layer = gmaps.heatmap_layer(locations)
 
@@ -440,3 +442,34 @@ def get_categories_subset(labels=(), categories=None):
         print("Warning: the categories subset created is empty.")
 
     return categories_subset
+
+
+def load_districts_layer(city):
+    """
+    Loads and computes for a given city a layer corresponding to the
+    district's population density
+
+    Parameters
+    ----------
+    city : string
+        Name of the city to which the csv belongs
+
+    Returns
+    -------
+    gmaps geojson layer for mapping
+
+    """
+    with open('geojson/{}.geojson'.format(city), 'r') as f:
+        districts_geometry = json.load(f)
+
+    colors = []
+    districts = distr.read_district_density_csv(city)
+    district_colors = distr.calculate_color(districts)
+
+    for elem in districts_geometry['features']:
+        current_name = elem['properties'].get('name')
+        colors.append(district_colors[current_name])
+
+    return gmaps.geojson_layer(districts_geometry, fill_color=colors,
+                               stroke_color=colors,
+                               fill_opacity=co.LAYER_TRANSPARENCY)
