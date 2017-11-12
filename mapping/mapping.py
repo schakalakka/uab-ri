@@ -1,5 +1,6 @@
 # Import custom constants
 from . import constants as co
+from . import districts
 
 # Import GMaps Package
 import gmaps
@@ -7,6 +8,7 @@ import gmaps
 # Import default libraries
 import sys
 from datetime import datetime
+import json
 
 # Import mu_requests functions and MeetUp Key from local files
 """
@@ -91,13 +93,13 @@ def read_custom_csv(filename, category_list):
 
     with open(filename, 'r') as f:
         for line in f:
-            if(line.startswith("#")):
+            if (line.startswith("#")):
                 category_id = int(line.strip("#").strip())
-                if(category_id == 0):
+                if (category_id == 0):
                     line = next(f)
                     num_activities = int(line)
                     line = next(f)
-                if(category_id in category_list):
+                if (category_id in category_list):
                     line = next(f)
                     while (not line.startswith("!#")):
                         parsed_event = line_parser(line)
@@ -156,7 +158,7 @@ def color_patterns_parser(color_patterns):
         parsed_color_patterns.append(co.DEFAULT_GRADIENT)
 
     elif ((type(color_patterns) is not list) and
-          (type(color_patterns) is not tuple)):
+              (type(color_patterns) is not tuple)):
         try:
             parsed_color_patterns.append(co.COLOR_GRADIENTS[color_patterns])
         except KeyError:
@@ -238,7 +240,7 @@ def datetime_parser(datetime_list):
     for datetime_object in datetime_list:
 
         if ((type(datetime_object) is not list) and
-           (type(datetime_object) is not tuple)):
+                (type(datetime_object) is not tuple)):
 
             if datetime_object < now:
                 parsed_datetime.append((datetime_object, now))
@@ -248,11 +250,11 @@ def datetime_parser(datetime_list):
         else:
             if datetime_object[0] > datetime_object[1]:
                 parsed_datetime.append((datetime_object[1],
-                                       datetime_object[0]))
+                                        datetime_object[0]))
 
             else:
                 parsed_datetime.append((datetime_object[0],
-                                       datetime_object[1]))
+                                        datetime_object[1]))
 
     return parsed_datetime
 
@@ -285,25 +287,25 @@ def locations_parser(data, time_interval=None):
         event_date = datetime.fromtimestamp(int(event.get("date")) / 1000)
         if time_interval is not None:
             if ((time_interval[0] > event_date) or
-               (event_date > time_interval[1])):
+                    (event_date > time_interval[1])):
                 continue
 
         latitude = event.get("latitude")
         longitude = event.get("longitude")
 
         if ((latitude == "None") or (longitude == "None") or
-           (latitude == "0" and longitude == "0")):
+                (latitude == "0" and longitude == "0")):
             continue
 
         else:
             parsed_locations.append((float(event["latitude"]),
-                                    float(event["longitude"])))
+                                     float(event["longitude"])))
 
     return parsed_locations
 
 
 def map_activities(city, categories=None, time_intervals=None,
-                   color_patterns=None, max_intensity=1):
+                   color_patterns=None, max_intensity=1, geojson=False):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -325,7 +327,8 @@ def map_activities(city, categories=None, time_intervals=None,
         constants.py file.
     max_intensity : float
         A value that sets the maximum intensity for the heat map.
-
+    geojson : boolean
+        If True it uses a geojson file of city to map an additional population density layer
     Returns
     -------
     my_map : gmaps object
@@ -333,6 +336,12 @@ def map_activities(city, categories=None, time_intervals=None,
         in a Jupyter Notebook.
     """
     my_map = gmaps.figure()
+
+    #if geojson==True use an additional layer for the population density
+    if geojson:
+        districts_layer = districts.load_districts_layer(city)
+        my_map.add_layer(districts_layer)
+
 
     # Define initial variables, if needed
     if categories is None:
@@ -368,10 +377,11 @@ def map_activities(city, categories=None, time_intervals=None,
             # Filter those events with wrong or unknown locations
             locations = locations_parser(events_data, value)
 
-        if(len(locations) == 0):
+        if (len(locations) == 0):
             print("No local activities were found in " +
                   "{} matching {}: {}".format(city, iterator_type, value))
             continue
+
 
         layer = gmaps.heatmap_layer(locations)
 
