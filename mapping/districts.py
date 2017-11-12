@@ -2,7 +2,7 @@
 import csv
 
 # To handle colors
-from matplotlib.cm import plasma
+from matplotlib.cm import plasma, inferno, Greys
 from matplotlib.colors import to_hex
 
 
@@ -38,7 +38,7 @@ def read_district_density_csv(city):
     return districts
 
 
-def calculate_color(density_dict):
+def calculate_color(density_dict, colorscheme=None, invert=False):
     """
     Transforms the population densities to a gmap color for mapping
 
@@ -60,8 +60,24 @@ def calculate_color(density_dict):
     normalized_values = {key: val / biggest_density for key, val in
                          density_dict.items()}
 
+    if invert:
+        # invert values v-> (1-v)
+        normalized_values = {key: 1 - val for key, val in
+                             normalized_values.items()}
+
+    # define matplotlib colorscheme
+    if colorscheme == 'Greys':
+        colorscheme_func = Greys
+    elif colorscheme == 'plasma':
+        colorscheme_func = plasma
+    elif colorscheme == 'inferno':
+        colorscheme_func = inferno
+    else:
+        colorscheme_func = Greys
+
     # transform the normalized density to a matplotlib color
-    mpl_color = {key: plasma(val) for key, val in normalized_values.items()}
+    mpl_color = {key: colorscheme_func(val) for key, val in
+                 normalized_values.items()}
 
     # transform from a matplotlib color to a valid CSS color
     gmaps_color = {key: to_hex(val, keep_alpha=False) for key, val in

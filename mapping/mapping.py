@@ -307,7 +307,8 @@ def locations_parser(data, time_interval=None):
 
 
 def map_activities(city, categories=None, time_intervals=None,
-                   color_patterns=None, max_intensity=1, geojson=False):
+                   color_patterns=None, max_intensity=1, geojson=False,
+                   geojson_options={}):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -331,7 +332,13 @@ def map_activities(city, categories=None, time_intervals=None,
         A value that sets the maximum intensity for the heat map.
     geojson : boolean
         If True it uses a geojson file of city to map an additional population
-        density layer.
+        density layer
+    geojson_options : dict
+        Dictionary containing geojson options like
+            colorscheme = 'Greys','viridis','inferno','plasma'
+            invert = True or False for inverting the colorscheme
+            opacity = int in the range of [0,1]
+
     Returns
     -------
     my_map : gmaps object
@@ -342,7 +349,13 @@ def map_activities(city, categories=None, time_intervals=None,
 
     # If geojson==True use an additional layer for the population density
     if geojson:
-        districts_layer = load_districts_layer(city)
+
+        colorscheme = geojson_options.get('colorscheme')
+        opacity = geojson_options.get('opacity')
+        invert = geojson_options.get('invert', False)
+        districts_layer = load_districts_layer(
+            city, colorscheme=colorscheme, opacity=opacity, invert=invert)
+
         my_map.add_layer(districts_layer)
 
     # Define initial variables, if needed
@@ -444,7 +457,7 @@ def get_categories_subset(labels=(), categories=None):
     return categories_subset
 
 
-def load_districts_layer(city):
+def load_districts_layer(city, colorscheme, opacity=None, invert=False):
     """
     Loads and computes for a given city a layer corresponding to the
     district's population density
@@ -457,19 +470,23 @@ def load_districts_layer(city):
     Returns
     -------
     gmaps geojson layer for mapping
-
     """
     with open('geojson/{}.geojson'.format(city), 'r') as f:
         districts_geometry = json.load(f)
 
     colors = []
     districts = distr.read_district_density_csv(city)
-    district_colors = distr.calculate_color(districts)
+    district_colors = distr.calculate_color(districts, colorscheme,
+                                            invert=invert)
 
     for elem in districts_geometry['features']:
-        current_name = elem['properties'].get('name')
+        current_name = elem['properties'].get('name') or \
+            elem['properties'].get('spatial_alias')
         colors.append(district_colors[current_name])
 
+    # set opacity if no argument given
+    if opacity is None:
+        opacity = co.LAYER_TRANSPARENCY
+
     return gmaps.geojson_layer(districts_geometry, fill_color=colors,
-                               stroke_color=colors,
-                               fill_opacity=co.LAYER_TRANSPARENCY)
+                               stroke_color=colors, fill_opacity=opacity)
