@@ -305,7 +305,7 @@ def locations_parser(data, time_interval=None):
 
 
 def map_activities(city, categories=None, time_intervals=None,
-                   color_patterns=None, max_intensity=1, geojson=False):
+                   color_patterns=None, max_intensity=1, geojson=False, geojson_options={}):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -329,6 +329,11 @@ def map_activities(city, categories=None, time_intervals=None,
         A value that sets the maximum intensity for the heat map.
     geojson : boolean
         If True it uses a geojson file of city to map an additional population density layer
+    geojson_options : dict
+        Dictionary containing geojson options like
+            colorscheme = 'Greys','viridis','inferno','plasma'
+            invert = True or False for inverting the colorscheme
+            opacity = int in the range of [0,1]
     Returns
     -------
     my_map : gmaps object
@@ -339,7 +344,10 @@ def map_activities(city, categories=None, time_intervals=None,
 
     #if geojson==True use an additional layer for the population density
     if geojson:
-        districts_layer = districts.load_districts_layer(city)
+        colorscheme = geojson_options.get('colorscheme')
+        opacity = geojson_options.get('opacity')
+        invert = geojson_options.get('invert', False)
+        districts_layer = districts.load_districts_layer(city, colorscheme=colorscheme, opacity=opacity, invert=invert)
         my_map.add_layer(districts_layer)
 
 
