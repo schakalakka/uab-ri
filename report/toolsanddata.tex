@@ -1,2 +1,18 @@
 \section{Tools and Data}\label{sec:toolsanddata}
-The main work for our project was done in the Python programming language in version 3.6 \cite{python}. \cite{gmaps},  \cite{matplotlib} \cite{jupyter}, \cite{requests}
+\subsection{Tools} 
+The main work for our project was done in the Python programming language in version 3.6 \cite{python}. The most notable used Python libraries where requests \cite{requests}, gmaps \cite{gmaps}, Jupyter \cite{jupyter} and matplotlib \cite{matplotlib}. The requests package was used to call and request data from the Meetup API \cite{meetupapi}. 
+
+With Jupyter Notebook and gmaps we were able to plot the obtained data from the Meetup API, Wikipedia and other resources in a browser. In detail Jupyter provides the general browser session functionality whereas gmaps extends Jupyter with an interactive map provided by Google Maps \cite{googlemaps}. One can visualize specific points or areas in various colors and densities to create meaningful maps. 
+Matplotlib was used to transform the data from population density into specific color schemes. 
+
+\subsection{Data}
+
+As already noted we used the following data sources: 
+
+\begin{itemize}
+\item Meetup API: To get the events in the examined cities. 
+\item Wikipedia: For obtaining data about the population density of the cities and their districts. 
+\item Various resources for GeoJSON files: To visualize districts onto Google Maps. \textcolor{red}{TODO}
+\item Google Maps: As a general back-end for our visualization.  
+
+\end{itemize}
