@@ -2,14 +2,14 @@
 import csv
 
 # To handle colors
-from matplotlib.cm import plasma, inferno, Greys
+from matplotlib.cm import plasma, inferno, Greys, viridis
 from matplotlib.colors import to_hex
 
 
 def read_district_density_csv(city):
     """
     Reads a district density csv file of the format:
-
+    District;Population;Population density;area in sqm
     Mitte;1245
     Friedrichshain-Kreuzberg;5124
     ...
@@ -33,7 +33,7 @@ def read_district_density_csv(city):
         reader = csv.reader(f, delimiter=';')
 
         for row in reader:
-            districts[row[0]] = float(row[1])
+            districts[row[0]] = float(row[2])
 
     return districts
 
@@ -72,6 +72,8 @@ def calculate_color(density_dict, colorscheme=None, invert=False):
         colorscheme_func = plasma
     elif colorscheme == 'inferno':
         colorscheme_func = inferno
+    elif colorscheme == 'viridis':
+        colorscheme_func = viridis
     else:
         colorscheme_func = Greys
 
