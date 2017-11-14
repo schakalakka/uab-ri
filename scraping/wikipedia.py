@@ -145,10 +145,17 @@ def float_parser(string, language):
     string = str(string)
     string = re.sub('<[^>]+>', '', string)
 
+    if string == "":
+        return None
+
     if language == "en":
-        string = string.replace(",", "")
+        string = string.replace(',', '')
+    else:
+        string = string.replace('.', '')
+        string = string.replace(',', '.')
 
     if len(re.findall('\d+\.\d+', string)) == 0:
+
         string = re.findall('\d+', string)[0]
 
     else:
@@ -247,33 +254,51 @@ def table_parser(table, language):
     return district_data
 
 
-def scrap_districts_population(city):
+def scrap_districts_population(city, source_of_paths=co.SEARCH_PATHS,
+                               source_of_languages=co.LANGUAGES):
     table = None
-    search_paths = copy.deepcopy(co.SEARCH_PATHS)
-    languages = copy.deepcopy(co.LANGUAGES)
-    language = languages.pop(0)
+    search_paths = copy.deepcopy(source_of_paths)
+    languages = copy.deepcopy(source_of_languages)
+    language = languages[0]
 
-    while (table is None) and (len(languages) != 0 and len(search_paths) != 0):
-        if len(search_paths[language]) == 0:
+    while (table is None) and (len(languages) != 0 or
+                               len(search_paths[language]) != 0):
+        while (len(search_paths[language]) == 0) and (len(languages) != 0):
             language = languages.pop(0)
 
-        search_path = search_paths[language].pop(0)
-
-        table = get_population_table(city, language, search_path)
+        if len(search_paths[language]) != 0:
+            search_path = search_paths[language].pop(0)
+            table = get_population_table(city, language, search_path)
 
     if table is None:
-        sys.exit("Unable to find districts of {}".format(city) +
-                 " in Wikipedia database")
+        district_data = {None: None}
 
-    district_data = table_parser(table, language)
+    else:
+        district_data = table_parser(table, language)
+
+    if list(district_data.keys())[0] is None:
+        print(" No useful information found here, looking somewhere else...")
+
+        if (len(languages) > 0) or (len(search_paths[language]) > 0):
+            district_data = scrap_districts_population(city,
+                                                       search_paths,
+                                                       languages)
+        else:
+            sys.exit("Unable to find districts of {}".format(city) +
+                     " in Wikipedia database")
 
     return district_data
 
 
 def write_csv(city, district_data, filename="./districts/{}.csv"):
     os.makedirs(os.path.dirname(filename.format(city)), exist_ok=True)
+
     with open(filename.format(city), 'w') as f:
         writer = csv.writer(f, delimiter=';')
+
         for key, value in district_data.items():
             writer.writerow((key, value["Population"], value["Density"],
                             value["Area"]))
+
+    print("The following csv file was written: " +
+          "\'{}\'".format(filename.format(city)))
