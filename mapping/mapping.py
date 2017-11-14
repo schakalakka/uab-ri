@@ -160,7 +160,7 @@ def color_patterns_parser(color_patterns):
         parsed_color_patterns.append(co.DEFAULT_GRADIENT)
 
     elif ((type(color_patterns) is not list) and
-          (type(color_patterns) is not tuple)):
+              (type(color_patterns) is not tuple)):
         try:
             parsed_color_patterns.append(co.COLOR_GRADIENTS[color_patterns])
         except KeyError:
@@ -349,7 +349,6 @@ def map_activities(city, categories=None, time_intervals=None,
 
     # If geojson==True use an additional layer for the population density
     if geojson:
-
         colorscheme = geojson_options.get('colorscheme')
         opacity = geojson_options.get('opacity')
         invert = geojson_options.get('invert', False)
@@ -480,8 +479,8 @@ def load_districts_layer(city, colorscheme, opacity=None, invert=False):
                                             invert=invert)
 
     for elem in districts_geometry['features']:
-        current_name = elem['properties'].get('name') or \
-            elem['properties'].get('spatial_alias') or elem['properties'].get('stadtbezirk')
+        current_name = elem['properties'].get('name') or elem['properties'].get('spatial_alias') or \
+                       elem['properties'].get('stadtbezirk') or elem['properties'].get('neighbourhood')
         colors.append(district_colors[current_name])
 
     # set opacity if no argument given
