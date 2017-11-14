@@ -156,7 +156,11 @@ def float_parser(string, language):
 
     if len(re.findall('\d+\.\d+', string)) == 0:
 
-        string = re.findall('\d+', string)[0]
+        if len(re.findall('\d+', string)) > 1:
+            if float(re.findall('\d+', string)[0]) > 1000000000:
+                string = re.findall('\d+', string)[1]
+            else:
+                string = re.findall('\d+', string)[0]
 
     else:
         string = re.findall('\d+\.\d+', string)[0]
@@ -180,7 +184,7 @@ def table_parser(table, language):
         categories = row.findChildren('th')
         nths += 1
 
-        if len(categories) == 0:
+        if len(categories) <= 1:
             break
 
         for ncol, category in enumerate(categories):
@@ -224,7 +228,7 @@ def table_parser(table, language):
                 continue
 
         # print("categories: ", categories)
-        # print("cols: ", name_col, population_col, density_col)
+        # print("cols: ", name_col, population_col, density_col, area_col)
 
     distr_name = None
     distr_population = None
@@ -232,8 +236,12 @@ def table_parser(table, language):
     distr_area = None
 
     for row in rows[(nths - 1):]:
+        if str(row.findChildren()[0]).startswith("<th>"):
+            ncell = 1
+        else:
+            ncell = 0
+
         cols = row.findChildren('td')
-        ncell = 0
         for col in cols:
             ncell += search_colspan(col)
             if search_colspan(col) > 2:
