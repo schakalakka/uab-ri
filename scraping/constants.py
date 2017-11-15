@@ -27,7 +27,7 @@ POPULATION_LIST = {LANGUAGES[0]: ("Population", "Residents"),
                    LANGUAGES[1]: ("Población", ),
                    LANGUAGES[2]: ("Einwohner", )}
 
-DENSITY_LIST = {LANGUAGES[0]: ("Density", ),
+DENSITY_LIST = {LANGUAGES[0]: ("Density", "Population density"),
                 LANGUAGES[1]: ("Densidad", ),
                 LANGUAGES[2]: ("Dichte", )}
 
