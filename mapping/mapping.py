@@ -556,14 +556,14 @@ def load_districts_layer(city, colorscheme, counter_data=None,
                 if district_name == "Not Located":
                     continue
                 density[district_name] = events_number / \
-                    population[district_name]
+                                         population[district_name]
         else:
             density = counter_data
 
     colors = []
     districts = distr.read_district_csv(city, "Density")
     district_colors = distr.calculate_color(density, colorscheme,
-                                                invert=invert)
+                                            invert=invert)
 
     for elem in districts_geometry['features']:
         current_name = elem['properties'].get('name') or elem['properties'].get('spatial_alias') or \
@@ -576,3 +576,12 @@ def load_districts_layer(city, colorscheme, counter_data=None,
 
     return gmaps.geojson_layer(districts_geometry, fill_color=colors,
                                stroke_color=colors, fill_opacity=opacity)
+
+
+def print_city_map_only(city, opacity=None):
+    my_map = gmaps.figure()
+    with open('geojson/{}.geojson'.format(city), 'r') as f:
+        districts_geometry = json.load(f)
+    my_map.add_layer(gmaps.geojson_layer(districts_geometry, stroke_color='black',
+                               fill_opacity=(opacity or co.LAYER_TRANSPARENCY)))
+    return my_map
