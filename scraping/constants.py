@@ -31,6 +31,6 @@ DENSITY_LIST = {LANGUAGES[0]: ("Density", "Population density"),
                 LANGUAGES[1]: ("Densidad", ),
                 LANGUAGES[2]: ("Dichte", )}
 
-AREA_LIST = {LANGUAGES[0]: ("Area", "Size"),
-             LANGUAGES[1]: ("Area", ),
+AREA_LIST = {LANGUAGES[0]: ("Area", "Size", "Land"),
+             LANGUAGES[1]: ("Superficie", ),
              LANGUAGES[2]: ("Fläche", )}

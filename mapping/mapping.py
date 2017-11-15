@@ -578,8 +578,7 @@ def load_districts_layer(city, colorscheme, counter_data=None,
                                             invert=invert)
 
     for elem in districts_geometry['features']:
-        current_name = elem['properties'].get('name') or elem['properties'].get('spatial_alias') or \
-                       elem['properties'].get('stadtbezirk') or elem['properties'].get('neighbourhood')
+        current_name = elem['properties'].get('name')
         colors.append(district_colors[current_name])
 
     # set opacity if no argument given

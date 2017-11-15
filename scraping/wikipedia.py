@@ -185,48 +185,56 @@ def table_parser(table, language):
         categories = row.findChildren('th')
         nths += 1
 
-        if len(categories) <= 1:
+        if nrow > 1 and len(categories) <= 1:
             break
 
+        ncell = 0
+
         for ncol, category in enumerate(categories):
-            ncell = 0
+            current_span = search_colspan(category)
+            ncell += current_span
 
             if category.text.startswith(co.NAME_LIST[language]) and \
                     (name_col is None):
-                for cell in categories[0:ncol]:
-                    ncell += search_colspan(cell)
-                name_col = ncell
+                name_col = ncell - 1
                 continue
 
             elif category.text.startswith(co.POPULATION_LIST[language]) and \
                     (population_col is None):
-                for cell in categories[0:ncol]:
-                    ncell += search_colspan(cell)
-                population_col = ncell
+                population_col = ncell - 1
                 continue
 
             elif category.text.startswith(co.AREA_LIST[language]) and \
                     (area_col is None):
-                for cell in categories[0:ncol]:
-                    ncell += search_colspan(cell)
-                area_col = ncell
-                continue
+                if (current_span > 1):
+                    subcategories = rows[nrow + 1].findChildren('th')
+                    if len(subcategories) >= ncell:
+                        subcategories = subcategories[(ncell - current_span):ncell]
+                        for nsubcell, subcategory in enumerate(subcategories):
+                            subcategory = str(subcategory)
+                            if "km" in subcategory:
+                                area_col = ncell - current_span + nsubcell
+                                break
+                        continue
+                else:
+                    area_col = ncell - 1
+                    continue
 
             elif category.text.startswith(co.DENSITY_LIST[language]) and \
                     (density_col is None):
-                if (search_colspan(category) > 1):
+                if (current_span > 1):
                     subcategories = rows[nrow + 1].findChildren('th')
-                    if subcategories == []:
-                        density_col = ncol
-                    else:
-                        for ncell, subcategory in enumerate(subcategories):
+                    if len(subcategories) >= ncell:
+                        subcategories = subcategories[(ncell - current_span):ncell]
+                        for nsubcell, subcategory in enumerate(subcategories):
                             subcategory = str(subcategory)
-                            if ("persons" in subcategory) and \
-                                    ("km" in subcategory):
-                                density_col = ncell
+                            if "km" in subcategory:
+                                density_col = ncell - current_span + nsubcell
+                                break
+                        continue
                 else:
-                    density_col = ncol
-                continue
+                    density_col = ncell - 1
+                    continue
 
         # print("categories: ", categories)
         # print("cols: ", name_col, population_col, density_col, area_col)
@@ -263,6 +271,16 @@ def table_parser(table, language):
     return district_data
 
 
+def conversion(district_data):
+    for district_name, data in district_data.items():
+        # Conversion from hectare to km2
+        if data['Area'] is not None:
+            data['Area'] = data['Area'] * 0.01
+        if data['Density'] is not None:
+            data['Density'] = data['Density'] * 100
+    return district_data
+
+
 def scrap_districts_population(city, source_of_paths=co.SEARCH_PATHS,
                                source_of_languages=co.LANGUAGES):
     table = None
@@ -295,6 +313,9 @@ def scrap_districts_population(city, source_of_paths=co.SEARCH_PATHS,
         else:
             sys.exit("Unable to find districts of {}".format(city) +
                      " in Wikipedia database")
+
+    if language == "es":
+        district_data = conversion(district_data)
 
     return district_data
 
