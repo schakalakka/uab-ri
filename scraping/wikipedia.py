@@ -135,7 +135,7 @@ def string_parser(string):
     string = str(string)
     if '\n' in string:
         string = string.replace('\n', '')
-    string = string.replace('*','')
+    string = string.replace('*', '')
     return string
 
 
@@ -146,7 +146,7 @@ def float_parser(string, language):
     string = str(string)
     string = re.sub('<[^>]+>', ' ', string)
 
-    if string == "":
+    if not string.strip():
         return None
 
     if language == "en":

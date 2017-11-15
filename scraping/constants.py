@@ -13,7 +13,7 @@ SEARCH_PATHS_EN = ["Districts of {}", "Boroughs and neighborhoods of {}",
 
 SEARCH_PATHS_ES = ["Distritos de {}", "Barrios de {}"]
 
-SEARCH_PATHS_DE = ["Stadtbezirke {}", ]
+SEARCH_PATHS_DE = ["Stadtbezirke {}s", ]
 
 SEARCH_PATHS = {LANGUAGES[0]: SEARCH_PATHS_EN,
                 LANGUAGES[1]: SEARCH_PATHS_ES,
