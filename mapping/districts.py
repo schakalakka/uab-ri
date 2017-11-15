@@ -48,8 +48,13 @@ def read_district_csv(city, key="Density"):
         index = co.CSV_FORMAT_TRANSLATOR[key]
 
         for row in reader:
-            districts[row[0]] = float(row[index])
-
+            try:
+                districts[row[0]] = float(row[index])
+            except:
+                if key=='Density':
+                    districts[row[0]] = float(row[1])/float(row[3])
+                else:
+                    print('Some error occured. Is the districts.csv file correct?')
     return districts
 
 
