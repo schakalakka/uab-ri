@@ -411,6 +411,62 @@ def map_activities(city, categories=None, time_intervals=None,
     return my_map
 
 
+def paint_districts(city, categories=None, time_intervals=None,
+                    colorscheme='Grays', opacity=None,
+                    per_capita=False):
+    """
+    It creates a gmaps object which is going to be used to paint all the
+    districts in a city according to the number of MeetUp activities that they
+    contain.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city whose activities we want to map.
+    categories : dictionary of categories
+        This dictionary has category ids as keys and category labels as items.
+    time_intervals : either a datetime object or a list of datetime objects
+        Each datetime object describes either both limits of a time interval or
+        just one. In this last case, the time interval is calculated by using
+        the current time as the other limit of the timer interval.
+    max_intensity : string
+        It defines the colorscheme that will be used in the painting of the
+        districts. It supports: 'Greys','viridis','inferno and 'plasma'.
+    opacity : float
+        It defines the opacity of the district layers. It supports a value in
+        the range of [0,1]
+    per_capita : boolean
+        If true, and if counter_data is provided, it will paint districts
+        according to the (Number of activites in a district) / (Population in
+        this district) ratio.
+
+    Returns
+    -------
+    my_map : gmaps object
+        This object will be used to plot the map and all activities locations
+        in a Jupyter Notebook.
+    """
+    my_map = gmaps.figure()
+
+    # Define initial variables, if needed
+    if categories is None:
+        categories = local_categories
+
+    events_data, num_activities = read_custom_csv(
+        './csv/{}.csv'.format(city), [i for i in categories])
+
+    counter = distr.events_per_district(events_data,
+                                        './geojson/{}.geojson'.format(city))
+
+    districts_layer = load_districts_layer(city, colorscheme=colorscheme,
+                                           counter_data=counter,
+                                           opacity=opacity,
+                                           per_capita=per_capita)
+    my_map.add_layer(districts_layer)
+
+    return my_map
+
+
 def get_categories_subset(labels=(), categories=None):
     """
     It returns a subset of the categories dictionary depending on the category
@@ -457,7 +513,8 @@ def get_categories_subset(labels=(), categories=None):
     return categories_subset
 
 
-def load_districts_layer(city, colorscheme, opacity=None, invert=False):
+def load_districts_layer(city, colorscheme, counter_data=None,
+                         opacity=None, invert=False, per_capita=False):
     """
     Loads and computes for a given city a layer corresponding to the
     district's population density
@@ -466,6 +523,21 @@ def load_districts_layer(city, colorscheme, opacity=None, invert=False):
     ----------
     city : string
         Name of the city to which the csv belongs
+    colorscheme : string
+        It defines the colorscheme that will be used in the painting of the
+        districts. It supports: 'Greys','viridis','inferno and 'plasma'.
+    counter_data : dictionary
+        If supplied, it will help to paint the districts according to the
+        number of activities that each one has.
+    opacity : float
+        It defines the opacity of the district layers. It support values
+        between 0 and 1.
+    invert : boolean
+        If true, it inverts the colors of the colorscheme.
+    per_capita : boolean
+        If true, and if counter_data is provided, it will paint districts
+        according to the (Number of activites in a district) / (Population in
+        this district) ratio.
 
     Returns
     -------
@@ -473,11 +545,27 @@ def load_districts_layer(city, colorscheme, opacity=None, invert=False):
     """
     with open('geojson/{}.geojson'.format(city), 'r') as f:
         districts_geometry = json.load(f)
+    if counter_data is None:
+        colors = []
+        districts = distr.read_district_density_csv(city)
+        district_colors = distr.calculate_color(districts, colorscheme,
+                                                invert=invert)
+    else:
+        if per_capita:
+            population = distr.read_district_population_csv(city)
+            density = {}
+            for district_name, events_number in counter_data.items():
+                if district_name == "Not Located":
+                    continue
+                density[district_name] = events_number / \
+                    population[district_name]
+        else:
+            density = counter_data
 
-    colors = []
-    districts = distr.read_district_density_csv(city)
-    district_colors = distr.calculate_color(districts, colorscheme,
-                                            invert=invert)
+        colors = []
+        districts = distr.read_district_density_csv(city)
+        district_colors = distr.calculate_color(density, colorscheme,
+                                                invert=invert)
 
     for elem in districts_geometry['features']:
         current_name = elem['properties'].get('name') or \

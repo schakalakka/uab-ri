@@ -5,13 +5,55 @@ import csv
 from matplotlib.cm import plasma, inferno, Greys, viridis
 from matplotlib.colors import to_hex
 
+# To work with json formatted files
+import json
+
+# To work with polygons
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
+# Import local libraries
+from . import mapping as mp
+
+
+def read_district_population_csv(city):
+    """
+    Reads a district population from a csv file of the format:
+        District;Population;Population density;area in sqm
+        Mitte;1245
+        Friedrichshain-Kreuzberg;5124
+    ...
+    ...
+    Pankow;1424
+
+    Parameters
+    ----------
+    city : string
+        Name of the city to which the csv belongs
+
+    Returns
+    -------
+    districts : dict
+        Dictionary with districts as a key and its population density
+        as a value
+    """
+    districts = {}
+
+    with open('districts/{}.csv'.format(city), 'r') as f:
+        reader = csv.reader(f, delimiter=';')
+
+        for row in reader:
+            districts[row[0]] = float(row[1])
+
+    return districts
+
 
 def read_district_density_csv(city):
     """
-    Reads a district density csv file of the format:
-    District;Population;Population density;area in sqm
-    Mitte;1245
-    Friedrichshain-Kreuzberg;5124
+    Reads a district density from a csv file of the format:
+        District;Population;Population density;area in sqm
+        Mitte;1245
+        Friedrichshain-Kreuzberg;5124
     ...
     ...
     Pankow;1424
@@ -38,7 +80,8 @@ def read_district_density_csv(city):
     return districts
 
 
-def calculate_color(density_dict, colorscheme=None, invert=False):
+def calculate_color(density_dict, colorscheme=None, counter_data=None,
+                    invert=False):
     """
     Transforms the population densities to a gmap color for mapping
 
@@ -47,6 +90,14 @@ def calculate_color(density_dict, colorscheme=None, invert=False):
     density_dict : dict
         Dictionary with districts as a key and its population density as a
         value
+    colorscheme : string
+        It defines the colorscheme that will be used in the painting of the
+        districts. It supports: 'Greys','viridis','inferno and 'plasma'.
+    counter_data : dictionary
+        If supplied, it will help to paint the districts according to the
+        number of activities that each one has.
+    invert : boolean
+        If true, it inverts the colors of the colorscheme.
 
     Returns
     -------
@@ -64,6 +115,26 @@ def calculate_color(density_dict, colorscheme=None, invert=False):
         # invert values v-> (1-v)
         normalized_values = {key: 1 - val for key, val in
                              normalized_values.items()}
+
+    """
+        if counter_data is None:
+        # get the biggest population density in the set
+        biggest_density = max([x for _, x in density_dict.items()])
+
+        # normalize the density according to the maximum
+        normalized_values = {key: val / biggest_density for key, val in
+                             density_dict.items()}
+
+        if invert:
+            # invert values v-> (1-v)
+            normalized_values = {key: 1 - val for key, val in
+                                 normalized_values.items()}
+    else:
+        for district_name in counter_data.items():
+            # get the biggest number of activities per district in the set
+            biggest_density = max([x for _, x in density_dict.items()])
+
+    """
 
     # define matplotlib colorscheme
     if colorscheme == 'Greys':
@@ -86,3 +157,69 @@ def calculate_color(density_dict, colorscheme=None, invert=False):
                    mpl_color.items()}
 
     return gmaps_color
+
+
+def events_per_district(events, geojson_filename):
+    """
+    This function tries to localize all the event of a city on its districts.
+
+    Parameters
+    ----------
+    events : list of dictionaries
+        These are the event we want to localize. Parent list contains different
+        events. Dictionaries contain the parsed data with the following format:
+            keys:   ["latitude", "longitude", "date", "name", "event_id"]
+            values: [string, string, integer, string, string]
+    geojson_filename : string
+        It is the direction to a file that contains the information about the
+        districts where we expect to find the events from above.
+
+    Returns
+    -------
+    counter : dictionary
+        It is a dictionary whose keys are all the districts where we have been
+        found events. Their items are the number of matches that have been
+        produced for each district.
+    """
+    event_locations = mp.locations_parser(events)
+
+    event_points = []
+
+    for event_location in event_locations:
+        event_points.append(Point(event_location[1], event_location[0]))
+
+    with open(geojson_filename, 'r') as f:
+        districts_geometry = json.load(f)
+
+    districts = districts_geometry['features']
+    district_polygons = {}
+
+    for district in districts:
+        name = district['properties']['name']
+        polygons = []
+        if district['geometry']['type'] == "Polygon":
+            for polygon in district['geometry']['coordinates']:
+                polygons.append(Polygon(polygon))
+        elif district['geometry']['type'] == "MultiPolygon":
+            for polygon in district['geometry']['coordinates']:
+                for subpolygon in polygon:
+                    polygons.append(Polygon(subpolygon))
+
+        district_polygons[name] = polygons
+
+    counter = {}
+
+    for district_name, district_polygons in district_polygons.items():
+        for district_polygon in district_polygons:
+            for event_point in event_points:
+                if district_polygon.contains(event_point):
+                    event_points.remove(event_point)
+                    if district_name not in counter:
+                        counter[district_name] = 1
+                    else:
+                        counter[district_name] += 1
+
+    notlocated = len(event_points)
+    counter["Not Located"] = notlocated
+
+    return counter
