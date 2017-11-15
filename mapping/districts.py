@@ -187,8 +187,8 @@ def events_per_district(events, geojson_filename):
 
     counter = {}
 
-    for district_name, district_polygons in district_polygons.items():
-        for district_polygon in district_polygons:
+    for district_name, polygons_list in district_polygons.items():
+        for district_polygon in polygons_list:
             for event_point in event_points:
                 if district_polygon.contains(event_point):
                     event_points.remove(event_point)
@@ -198,6 +198,13 @@ def events_per_district(events, geojson_filename):
                         counter[district_name] += 1
 
     notlocated = len(event_points)
+
+    # If there is any empty district, added it to get a dictionary consistent
+    # with the districts of the city
+    for district_name in district_polygons.keys():
+        if district_name not in counter.keys():
+            counter[district_name] = 0
+
     counter["Not Located"] = notlocated
 
     return counter

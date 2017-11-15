@@ -160,7 +160,7 @@ def color_patterns_parser(color_patterns):
         parsed_color_patterns.append(co.DEFAULT_GRADIENT)
 
     elif ((type(color_patterns) is not list) and
-              (type(color_patterns) is not tuple)):
+          (type(color_patterns) is not tuple)):
         try:
             parsed_color_patterns.append(co.COLOR_GRADIENTS[color_patterns])
         except KeyError:
@@ -308,7 +308,7 @@ def locations_parser(data, time_interval=None):
 
 def map_activities(city, categories=None, time_intervals=None,
                    color_patterns=None, max_intensity=1, geojson=False,
-                   geojson_options={}):
+                   geojson_options={}, verbose=False):
     """
     It creates a gmaps object which is going to be used to plot all the
     activity locations on a map.
@@ -338,6 +338,9 @@ def map_activities(city, categories=None, time_intervals=None,
             colorscheme = 'Greys','viridis','inferno','plasma'
             invert = True or False for inverting the colorscheme
             opacity = int in the range of [0,1]
+    verbose : boolean
+        If true, it will display the numeric results of the total number of
+        events that were found in each district.
 
     Returns
     -------
@@ -353,7 +356,8 @@ def map_activities(city, categories=None, time_intervals=None,
         opacity = geojson_options.get('opacity')
         invert = geojson_options.get('invert', False)
         districts_layer = load_districts_layer(
-            city, colorscheme=colorscheme, opacity=opacity, invert=invert)
+            city, colorscheme=colorscheme, opacity=opacity, invert=invert,
+            verbose=verbose)
 
         my_map.add_layer(districts_layer)
 
@@ -412,7 +416,7 @@ def map_activities(city, categories=None, time_intervals=None,
 
 def paint_districts(city, categories=None, time_intervals=None,
                     colorscheme='Grays', opacity=None,
-                    per_capita=False):
+                    per_capita=False, verbose=False):
     """
     It creates a gmaps object which is going to be used to paint all the
     districts in a city according to the number of MeetUp activities that they
@@ -438,6 +442,9 @@ def paint_districts(city, categories=None, time_intervals=None,
         If true, and if counter_data is provided, it will paint districts
         according to the (Number of activites in a district) / (Population in
         this district) ratio.
+    verbose : boolean
+        If true, it will display the numeric results of the total number of
+        events that were found in each district.
 
     Returns
     -------
@@ -460,7 +467,8 @@ def paint_districts(city, categories=None, time_intervals=None,
     districts_layer = load_districts_layer(city, colorscheme=colorscheme,
                                            counter_data=counter,
                                            opacity=opacity,
-                                           per_capita=per_capita)
+                                           per_capita=per_capita,
+                                           verbose=verbose)
     my_map.add_layer(districts_layer)
 
     return my_map
@@ -513,7 +521,8 @@ def get_categories_subset(labels=(), categories=None):
 
 
 def load_districts_layer(city, colorscheme, counter_data=None,
-                         opacity=None, invert=False, per_capita=False):
+                         opacity=None, invert=False, per_capita=False,
+                         verbose=False):
     """
     Loads and computes for a given city a layer corresponding to the
     district's population density
@@ -529,14 +538,17 @@ def load_districts_layer(city, colorscheme, counter_data=None,
         If supplied, it will help to paint the districts according to the
         number of activities that each one has.
     opacity : float
-        It defines the opacity of the district layers. It support values
-        between 0 and 1.
+        It defines the opacity of the district layers. It supports a value in
+        the range of [0,1]
     invert : boolean
         If true, it inverts the colors of the colorscheme.
     per_capita : boolean
         If true, and if counter_data is provided, it will paint districts
         according to the (Number of activites in a district) / (Population in
         this district) ratio.
+    verbose : boolean
+        If true, it will display the numeric results of the total number of
+        events that were found in each district.
 
     Returns
     -------
@@ -545,23 +557,23 @@ def load_districts_layer(city, colorscheme, counter_data=None,
     with open('geojson/{}.geojson'.format(city), 'r') as f:
         districts_geometry = json.load(f)
 
+    population = distr.read_district_csv(city, "Population")
+
     if counter_data is None:
         density = distr.read_district_csv(city, "Density")
 
     else:
         if per_capita:
-            population = distr.read_district_csv(city, "Population")
             density = {}
             for district_name, events_number in counter_data.items():
                 if district_name == "Not Located":
                     continue
                 density[district_name] = events_number / \
-                                         population[district_name]
+                    population[district_name]
         else:
             density = counter_data
 
     colors = []
-    districts = distr.read_district_csv(city, "Density")
     district_colors = distr.calculate_color(density, colorscheme,
                                             invert=invert)
 
@@ -574,14 +586,38 @@ def load_districts_layer(city, colorscheme, counter_data=None,
     if opacity is None:
         opacity = co.LAYER_TRANSPARENCY
 
+    if verbose:
+        for district in districts_geometry['features']:
+            district_name = district['properties']['name']
+            print("District: {}  |  Number of events: {}".format(district_name,
+                  counter_data[district_name]) +
+                  "  |  Population: {}".format(population[district_name]))
+
     return gmaps.geojson_layer(districts_geometry, fill_color=colors,
                                stroke_color=colors, fill_opacity=opacity)
 
 
-def print_city_map_only(city, opacity=None):
+def print_city_districts(city, opacity=None):
+    """
+    It prints all the districts of a city by looking at its geojson file.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city whose districts we want to display.
+    opacity : float
+        It defines the opacity of the district layers. It supports a value in
+        the range of [0,1]
+
+    Returns
+    -------
+    my_map : gmaps object
+        This object will be used to plot the map and all activities locations
+        in a Jupyter Notebook.
+    """
     my_map = gmaps.figure()
     with open('geojson/{}.geojson'.format(city), 'r') as f:
         districts_geometry = json.load(f)
     my_map.add_layer(gmaps.geojson_layer(districts_geometry, stroke_color='black',
-                               fill_opacity=(opacity or co.LAYER_TRANSPARENCY)))
+                                         fill_opacity=(opacity or co.LAYER_TRANSPARENCY)))
     return my_map

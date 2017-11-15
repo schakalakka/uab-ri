@@ -7,7 +7,7 @@ LANGUAGES = ["en", "es", "de"]
 
 SEARCH_PATHS_EN = ["Districts of {}", "Boroughs and neighborhoods of {}",
                    "Boroughs and quarters of {}", "Boroughs of {}",
-                   "List_of_{}_boroughs",
+                   "Boroughs of {} City", "List_of_{}_boroughs",
                    "List_of_municipalities_of_the_{}-Capital_Region",
                    "Regional districts of {}"]
 
