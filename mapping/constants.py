@@ -32,3 +32,8 @@ COLOR_GRADIENTS = {"blue": BLUE_GRADIENT, "yellow": YELLOW_GRADIENT,
 COLOR_GRADIENTS_LIST = [BLUE_GRADIENT, YELLOW_GRADIENT, RED_GRADIENT,
                         GREEN_GRADIENT, GRAY_GRADIENT, ORANGE_GRADIENT,
                         PURPLE_GRADIENT, CYAN_GRADIENT, MAGENTA_GRADIENT]
+
+# CSV file keys-columns translator
+CSV_FORMAT_TRANSLATOR = {"Population": 1,
+                         "Density": 2,
+                         "Area": 3}

@@ -14,68 +14,41 @@ from shapely.geometry.polygon import Polygon
 
 # Import local libraries
 from . import mapping as mp
+from . import constants as co
 
 
-def read_district_population_csv(city):
+def read_district_csv(city, key="Density"):
     """
-    Reads a district population from a csv file of the format:
-        District;Population;Population density;area in sqm
-        Mitte;1245
-        Friedrichshain-Kreuzberg;5124
-    ...
-    ...
-    Pankow;1424
+    Reads a district data from a csv file with the following format:
+        District;Population;Population density per sqm;area in sqm
+    For instance:
+        Evere;39556.0;7911.0;5.0
+        Schaerbeek;132590.0;16369.0;8.1
+        ...
+        Etterbeek;47180.0;15219.0;3.1
 
     Parameters
     ----------
     city : string
         Name of the city to which the csv belongs
+    key : string
+        It tells which data to retrieve from the csv file.
 
     Returns
     -------
     districts : dict
-        Dictionary with districts as a key and its population density
-        as a value
+        Dictionary with districts as a key and its corresponding data as a
+        value.
     """
     districts = {}
 
     with open('districts/{}.csv'.format(city), 'r') as f:
         reader = csv.reader(f, delimiter=';')
 
-        for row in reader:
-            districts[row[0]] = float(row[1])
-
-    return districts
-
-
-def read_district_density_csv(city):
-    """
-    Reads a district density from a csv file of the format:
-        District;Population;Population density;area in sqm
-        Mitte;1245
-        Friedrichshain-Kreuzberg;5124
-    ...
-    ...
-    Pankow;1424
-
-    Parameters
-    ----------
-    city : string
-        Name of the city to which the csv belongs
-
-    Returns
-    -------
-    districts : dict
-        Dictionary with districts as a key and its population density
-        as a value
-    """
-    districts = {}
-
-    with open('districts/{}.csv'.format(city), 'r') as f:
-        reader = csv.reader(f, delimiter=';')
+        index = co.CSV_FORMAT_TRANSLATOR[key]
 
         for row in reader:
-            districts[row[0]] = float(row[2])
+            districts[row[0]] = float(row[index])
 
     return districts
 

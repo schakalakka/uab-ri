@@ -544,14 +544,13 @@ def load_districts_layer(city, colorscheme, counter_data=None,
     """
     with open('geojson/{}.geojson'.format(city), 'r') as f:
         districts_geometry = json.load(f)
+
     if counter_data is None:
-        colors = []
-        districts = distr.read_district_density_csv(city)
-        district_colors = distr.calculate_color(districts, colorscheme,
-                                                invert=invert)
+        density = distr.read_district_csv(city, "Density")
+
     else:
         if per_capita:
-            population = distr.read_district_population_csv(city)
+            population = distr.read_district_csv(city, "Population")
             density = {}
             for district_name, events_number in counter_data.items():
                 if district_name == "Not Located":
@@ -561,9 +560,9 @@ def load_districts_layer(city, colorscheme, counter_data=None,
         else:
             density = counter_data
 
-        colors = []
-        districts = distr.read_district_density_csv(city)
-        district_colors = distr.calculate_color(density, colorscheme,
+    colors = []
+    districts = distr.read_district_csv(city, "Density")
+    district_colors = distr.calculate_color(density, colorscheme,
                                                 invert=invert)
 
     for elem in districts_geometry['features']:
