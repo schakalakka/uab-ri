@@ -241,6 +241,24 @@ def write_num_activities(city, num_activities, f=None):
         f.write("#0\n{}\n!#\n".format(num_activities))
 
 
+def name_parser(string):
+    """
+    It avoids conflicting characters such as line breaks to be printed to the
+    file.
+
+    Parameters
+    ----------
+    string : string
+        String to be parsed
+
+    Returns
+    -------
+    string : string
+        Parsed string
+    """
+    return string.replace('\n', ' ')
+
+
 def write_data(city, parsed_data, category_id, f):
     """
     It writes down the parsed data for each one of the activities that were
@@ -267,9 +285,10 @@ def write_data(city, parsed_data, category_id, f):
     """
     f.write("#{}\n".format(category_id))
     for event in parsed_data:
+        parsed_name = name_parser(event["name"])
         f.write("{};{};{};{};{}\n".format(event["coordinates"][0],
                                           event["coordinates"][1],
-                                          event["date"], event["name"],
+                                          event["date"], parsed_name,
                                           event["id"]))
     f.write("!#\n")
 
