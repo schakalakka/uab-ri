@@ -10,3 +10,5 @@ report/report.blg
 report/report.log
 report/report.run.xml
 report/report.synctex.gz
+*.log
+*.toc
