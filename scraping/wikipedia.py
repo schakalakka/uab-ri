@@ -185,7 +185,7 @@ def table_parser(table, language):
         categories = row.findChildren('th')
         nths += 1
 
-        if nrow > 1 and len(categories) <= 1:
+        if nrow >= 1 and len(categories) <= 1:
             break
 
         ncell = 0
