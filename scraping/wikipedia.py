@@ -25,22 +25,81 @@ from . import constants as co
 
 
 def get_wikipedia_response(search_key, language="en"):
+    """
+    It attempts to get a response from a Wikipedia url.
+
+    Parameters
+    ----------
+    search_key : string
+        This is the Wikipedia url direction.
+    language : strin
+        It is the language abbreviation that decides in which language a
+        Wikipedia page must be search for.
+
+    Returns
+    -------
+    response : response object
+        It is the html response of the web address searched.
+    """
     url = (co.WIKIPEDIA_URL.format(language) + search_key).replace(" ", "_")
     response = requests.get(url, headers=co.HEADERS)
     return response
 
 
 def parse_http_response(response, parser="lxml"):
+    """
+    This function parses the html response by using BeautifulSoup.
+
+    Parameters
+    ----------
+    response : response object
+        It is an html response of a website.
+    parser : string
+        It stablishes which BeautifulSoup parser is going to be used.
+
+    Returns
+    -------
+    soup : BeautifulSoup object
+        It contains the html-parsed data.
+    """
     soup = BeautifulSoup(response.content, parser)
     return soup
 
 
+# Deprecated
 def get_wikipedia_infobox(soup):
+    """
+    This function looks for a Wikipedia infobox.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup object
+        It contains the html-parsed data.
+
+    Returns
+    -------
+    infobox : BeautifulSoup object
+        It contains the parsed infobox found, if any.
+    """
     infobox = soup.find('table', class_='infobox')
     return infobox
 
 
 def get_wikipedia_tables(soup):
+    """
+    This function looks for all Wikipedia tables.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup object
+        It contains the html-parsed data.
+
+    Returns
+    -------
+    list_of_tables : list of BeautifulSoup objects
+        It is a list containing all the tables found in the page, if any.
+    """
+
     list_of_tables = soup.findAll('table', class_='wikitable')
 
     if soup.find('table',
@@ -52,7 +111,24 @@ def get_wikipedia_tables(soup):
     return list_of_tables
 
 
+# Deprecated
 def get_population_data(infobox, keywords=("Total",)):
+    """
+    It gets the population data from a Wikipedia infobox.
+
+    Parameters
+    ----------
+    infobox : BeautifulSoup object
+        It contains the parsed Wikipedia infobox.
+    keywords : list of strings
+        Theses are all the keyword to search for in the Wikipedia infobox.
+
+    Returns
+    -------
+    scraped_data : string
+        It is a string with the information that was found in the Wikipedia
+        infobox.
+    """
     trs = infobox.findAll('tr')
 
     for tr in trs:
@@ -75,13 +151,43 @@ def get_population_data(infobox, keywords=("Total",)):
              "population section of Wikipedia's infobox.")
 
 
+# Deprecated
 def parse_population_data(data):
+    """
+    It parses population data.
+
+    Parameters
+    ----------
+    data : string
+        String containing the scraped data from a Wikipedia infobox.
+
+    Returns
+    -------
+    data : string
+        Parsed string.
+    """
     data = data.split("[")[0]
     return data
 
 
+# Deprecated
 def scrap_city_population(city, language="en",
                           keywords_to_scrap=(("Density",), ("Total", "City"))):
+    """
+    It scraps the population number for a given city from the infobox of its
+    Wikipedia page.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city.
+    language : strin
+        It is the language abbreviation that decides in which language a
+        Wikipedia page must be search for.
+    keywords_to_scrap : list of lists of strings
+        These are all the keywords that will be searched for in the Wikipedia
+        infobox.
+    """
     response = get_wikipedia_response(city, language)
 
     try:
@@ -109,6 +215,26 @@ def scrap_city_population(city, language="en",
 
 
 def get_population_tables(city, language, search_path):
+    """
+    It looks if a Wikipedia page has suitable tables that may contain
+    information about the disctricts population of a city.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city.
+    language : string
+        It is the language abbreviation that decides in which language a
+        Wikipedia page must be search for.
+    search_key : string
+        This is the Wikipedia url direction.
+
+    Returns
+    -------
+    list_of_tables : list of BeautifulSoup objects
+        This list contains all the tables that were found in this Wikipedia
+        page.
+    """
     response = get_wikipedia_response(search_path.format(city),
                                       language=language)
     try:
@@ -125,6 +251,20 @@ def get_population_tables(city, language, search_path):
 
 
 def search_colspan(html_fragment):
+    """
+    It looks for multiple cells and computes how many columns it is made of.
+
+    Parameters
+    ----------
+    html_fragment : BeautifulSoup object
+        It is a html fragment corresponding to a cell of a table.
+
+    Returns
+    -------
+    width : integer
+        It is the width of this cell expressed as the number of columns it
+        contains.
+    """
     html_fragment = str(html_fragment)
     if "colspan=\"" in html_fragment:
         html_fragment = html_fragment.split("colspan=\"")[1]
@@ -135,6 +275,19 @@ def search_colspan(html_fragment):
 
 
 def string_parser(string):
+    """
+    It parses the content of a cell that was identified as a string.
+
+    Parameters
+    ----------
+    string : BeautifulSoup object
+        It is a html fragment corresponding to the content of a cell.
+
+    Returns
+    -------
+    string : string
+        It is the corresponding parsed string.
+    """
     string = str(string)
     if '\n' in string:
         string = string.replace('\n', '')
@@ -143,6 +296,23 @@ def string_parser(string):
 
 
 def float_parser(string, language):
+    """
+    It parses the content of a cell that was identified as a float.
+
+    Parameters
+    ----------
+    string : BeautifulSoup object
+        It is a html fragment corresponding to the content of a cell.
+    language : string
+        It is the language abbreviation that decides in which language this
+        cell was written.
+
+    Returns
+    -------
+    string : float
+        It is the corresponding parsed float.
+    """
+
     if string is None:
         return None
 
@@ -173,6 +343,26 @@ def float_parser(string, language):
 
 
 def table_parser(table, language):
+    """
+    It parses a Wikipedia table with the aim to retrieve population data for
+    all the districts of a city.
+
+    Parameters
+    ----------
+    table : BeautifulSoup object
+        It is the html table parsed by BeautifulSoup.
+    language : string
+        It is the language abbreviation that decides in which language this
+        cell was written.
+
+    Returns
+    -------
+    district_data : dictionary of dictionaries
+        It is a dictionary that contains all parsed data that is retrieved from
+        the input table. Its format is the following:
+            keys:   [district name]
+            values: {"Population": float, "Density": float, "Area": float}
+    """
     rows = table.findChildren('tr')
 
     name_col = None
@@ -277,6 +467,24 @@ def table_parser(table, language):
 
 
 def conversion(district_data):
+    """
+    It converts area and density values that were expressed in hectares into
+    kilometers.
+
+    Parameters
+    ----------
+    district_data : dictionary of dictionaries
+        It is a dictionary that contains all parsed data that is retrieved from
+        the input table. Its format is the following:
+            keys:   [district name]
+            values: {"Population": float, "Density": float, "Area": float}
+
+    Returns
+    -------
+    district_data : dictionary of dictionaries
+        It is the same dictionary as the input but it contains the converted
+        area and density values expressed in kilometers.
+    """
     for district_name, data in district_data.items():
         # Conversion from hectare to km2
         if data['Area'] is not None:
@@ -288,6 +496,31 @@ def conversion(district_data):
 
 def scrap_districts_population(city, source_of_paths=co.SEARCH_PATHS,
                                source_of_languages=co.LANGUAGES):
+    """
+    It is the main function to scrap the population data from Wikipedia for all
+    the districts of a city.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city.
+    source_of_paths : dictionary of keyword lists
+        This dictionary has language abbreviations as keys and their
+        corresponding keyword lists. It has the following format:
+            keys:   [language abbreviation]
+            values: [list of "keywords"]
+    source_of_languages : list of language abbreviations
+        It is a list containing the language abbreviations for all the
+        languages whose Wikipedia pages we want to search into.
+
+    Returns
+    -------
+    data_list : list of dictionaries of dictionaries
+        It is a list containing all the population data for all the districts
+        of a city. The format of the inner dictionaries is the following:
+            keys:   [district name]
+            values: {"Population": float, "Density": float, "Area": float}
+    """
     list_of_tables = None
     search_paths = copy.deepcopy(source_of_paths)
     languages = copy.deepcopy(source_of_languages)
@@ -329,6 +562,21 @@ def scrap_districts_population(city, source_of_paths=co.SEARCH_PATHS,
 
 
 def write_csv(city, district_data, filename="./districts/{}.csv"):
+    """
+    This function write the scraped population data to a file.
+
+    Parameters
+    ----------
+    city : string
+        Name of the city.
+    data_list : list of dictionaries of dictionaries
+        It is a list containing all the population data for all the districts
+        of a city. The format of the inner dictionaries is the following:
+            keys:   [district name]
+            values: {"Population": float, "Density": float, "Area": float}
+    filename : string
+        Directory and filename of the file that is going to be written.
+    """
     os.makedirs(os.path.dirname(filename.format(city)), exist_ok=True)
 
     with open(filename.format(city), 'w') as f:

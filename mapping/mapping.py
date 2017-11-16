@@ -35,8 +35,8 @@ def line_parser(line):
     -------
     parsed_line : dictionary
         Dictionary that contains the parsed data with the following format:
-            keys:   ["coordinates", "date", "name", "event_id"]
-            values: [2-dim tuple of floats, integer, string, string]
+            keys:   ["latitude", "longitude", "date", "name", "event_id"]
+            values: [float, float, integer, string, string]
     """
     parsed_line = {}
     splitted_line = line.split(";")
@@ -84,8 +84,8 @@ def read_custom_csv(filename, category_list):
     parsed_events : list of dictionaries
         Parent list contains different events. Dictionaries contain the parsed
         data with the following format:
-            keys:   ["coordinates", "date", "name", "event_id"]
-            values: [2-dim tuple of floats, integer, string, string]
+            keys:   ["latitude", "longitude", "date", "name", "event_id"]
+            values: [float, float, integer, string, string]
      num_activities : integer
         Total number of activities that have been found in a specific city.
 
@@ -271,8 +271,8 @@ def locations_parser(data, time_interval=None):
     data : list of dictionaries
         Parent list contains different events. Dictionaries contain the parsed
         data with the following format:
-            keys:   ["coordinates", "date", "name", "event_id"]
-            values: [2-dim tuple of floats, integer, string, string]
+            keys:   ["latitude", "longitude", "date", "name", "event_id"]
+            values: [float, float, integer, string, string]
     time_interval : 2-dimensional tuple
         Contain the limits of the time interval where we want to search for
         events.

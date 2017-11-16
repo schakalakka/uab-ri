@@ -176,8 +176,8 @@ def data_parser(data, write_date, write_name, write_id):
     parsed_events : list of dictionaries
         Parent list contains different events. Dictionaries contain the parsed
         data with the following format:
-            keys:   ["coordinates", "date", "name", "event_id"]
-            values: [2-dim tuple of floats, integer, string, string]
+            keys:   ["latitude", "longitude", "date", "name", "event_id"]
+            values: [float, float, integer, string, string]
     """
     parsed_events = []
     for event in data:
@@ -280,8 +280,8 @@ def write_data(city, parsed_data, category_id, f):
     parsed_data : list of dictionaries
         Parent list contains different events. Dictionaries contain the parsed
         data with the following format:
-            keys:   ["coordinates", "date", "name", "event_id"]
-            values: [2-dim tuple of floats, integer, string, string]
+            keys:   ["latitude", "longitude", "date", "name", "event_id"]
+            values: [float, float, integer, string, string]
     """
     f.write("#{}\n".format(category_id))
     for event in parsed_data:
