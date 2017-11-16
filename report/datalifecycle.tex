@@ -1,3 +1,16 @@
 \section{Data Life-Cycle}\label{sec:datalifecycle}
 
-\smartdiagram[circular diagram:clockwise]{Creation, Storage, Use, Sharing, Archiving, Destruction}
+%\smartdiagram[circular diagram:clockwise]{Creation, Storage, Use, Sharing, Archiving, Destruction}
+
+In the following section we have a closer look at the terms "data lifecycle" and "data lifecycle management".\\"Data lifecycle" is a term which tries to describe the life of data and information. Since there is no unique definition of a data lifecycle, we define the folloing six stages: creation, storage, use, sharing, archiving and destruction \cite{spirion}.
+
+\begin{enumerate}
+	\item \textbf{Creation}: Data is created. It can be created as a structured or unstructured set of data, can be obtained by collection, measurements, generated or gathered. We create our data by using the \textcolor{red}{request-API}. During pur process we gather the needed data from the \url{Meetup.com} website. By performing a web scraping at \url{Wikipedia.org} we gather the number of population for different cities and its districts. In this way we create our data which is needed for this project.
+	\item \textbf{Storage}: Once the data is created it has to be stored. Depending on the purpose there are different kinds of storage solutions. However, this is not subject of this report. In our case both the data gathered from \url{Meetup.com} and \url{Wikipedia.org} is saved a csv-files on the hard drive.
+	\item \textbf{Use}: Data can be viewed, modified analyzed, corrected, interpreted, visualized, joined,... We use our data the visualize the behaviour of cities. We join our data from different sources and visualize it on a given map which can be seen as data as well. After visualizing the data we interpret the newly created data to obtain information about the cities.
+	\item \textbf{Sharing}: Data can be shared. There are several ways of sharing like sharing with persons, applications or in different operating environments. Since our data is not shared during the the process, we are not explaining this stage of the data lifecycle in detail.
+	\item \textbf{Archiving}: When the data leaves the active use, one should archive it in a suitable way. Since archiving is very similar to storaging, one can use the same methods. One difference may be that saved data needs to be compressed to save storage or protected to prevent unwanted changed. Therefore, the access is slightly more difficult than for data in active use. For this project we save our data on the one hand as GeoJSON-files and on the other hand as csv-files. Whereas the data saved in the GeoJSON-files are not subject to changes, since the geopolitical structure of cities does not change during this project, the csv-files underlie changes. For this reason there is a last stage in the data lifecycle.
+	\item \textbf{Destruction}: There are several reasons why one should destroy data. On the one hand the volume of archived data increases and one needs to save storage to store new data. On the other hand the data gets old and is not needed anymore. It is not up to date and can be replaced by newer versions. The second case is applicable for our work. During every single run of the program new csv-files with event data and new csv-files containing populations data are created. Especially the event data underlie a rapid change.
+\end{enumerate}
+
+The term "data lifecycle management" describes the process that helps to organize the flow of data throughout its lifecycle.
