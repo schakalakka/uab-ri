@@ -571,7 +571,12 @@ def load_districts_layer(city, colorscheme, counter_data=None,
                 density[district_name] = events_number / \
                     population[district_name]
         else:
-            density = counter_data
+            density = {}
+            for district_name, events_number in counter_data.items():
+                if district_name == "Not Located":
+                    continue
+                density[district_name] = events_number
+                # density = counter_data
 
     colors = []
     district_colors = distr.calculate_color(density, colorscheme,
