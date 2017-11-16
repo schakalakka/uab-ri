@@ -40,12 +40,16 @@ def get_wikipedia_infobox(soup):
     return infobox
 
 
-def get_wikipedia_table(soup):
-    table = soup.find('table', class_='wikitable')
-    if table is None:
-        table = soup.find('table',
-                          class_='wikitable sortable jquery-tablesorter')
-    return table
+def get_wikipedia_tables(soup):
+    list_of_tables = soup.findAll('table', class_='wikitable')
+
+    if soup.find('table',
+                 class_='wikitable sortable jquery-tablesorter') is not None:
+        for table in soup.find('table',
+                               class_='wikitable sortable jquery-tablesorter'):
+            list_of_tables.append(table)
+
+    return list_of_tables
 
 
 def get_population_data(infobox, keywords=("Total",)):
@@ -104,8 +108,7 @@ def scrap_city_population(city, language="en",
     return parsed_scraped_data
 
 
-def get_population_table(city, language, search_path):
-    table = None
+def get_population_tables(city, language, search_path):
     response = get_wikipedia_response(search_path.format(city),
                                       language=language)
     try:
@@ -116,9 +119,9 @@ def get_population_table(city, language, search_path):
         return None
 
     parsed_response = parse_http_response(response)
-    table = get_wikipedia_table(parsed_response)
+    list_of_tables = get_wikipedia_tables(parsed_response)
 
-    return table
+    return list_of_tables
 
 
 def search_colspan(html_fragment):
@@ -209,7 +212,8 @@ def table_parser(table, language):
                 if (current_span > 1):
                     subcategories = rows[nrow + 1].findChildren('th')
                     if len(subcategories) >= ncell:
-                        subcategories = subcategories[(ncell - current_span):ncell]
+                        subcategories = subcategories[
+                            (ncell - current_span):ncell]
                         for nsubcell, subcategory in enumerate(subcategories):
                             subcategory = str(subcategory)
                             if "km" in subcategory:
@@ -225,7 +229,8 @@ def table_parser(table, language):
                 if (current_span > 1):
                     subcategories = rows[nrow + 1].findChildren('th')
                     if len(subcategories) >= ncell:
-                        subcategories = subcategories[(ncell - current_span):ncell]
+                        subcategories = subcategories[
+                            (ncell - current_span):ncell]
                         for nsubcell, subcategory in enumerate(subcategories):
                             subcategory = str(subcategory)
                             if "km" in subcategory:
@@ -283,41 +288,44 @@ def conversion(district_data):
 
 def scrap_districts_population(city, source_of_paths=co.SEARCH_PATHS,
                                source_of_languages=co.LANGUAGES):
-    table = None
+    list_of_tables = None
     search_paths = copy.deepcopy(source_of_paths)
     languages = copy.deepcopy(source_of_languages)
     language = languages[0]
 
-    while (table is None) and (len(languages) != 0 or
-                               len(search_paths[language]) != 0):
+    while ((list_of_tables is None) and (len(languages) != 0 or
+           len(search_paths[language]) != 0)):
         while (len(search_paths[language]) == 0) and (len(languages) != 0):
             language = languages.pop(0)
 
         if len(search_paths[language]) != 0:
             search_path = search_paths[language].pop(0)
-            table = get_population_table(city, language, search_path)
+            list_of_tables = get_population_tables(city, language, search_path)
 
-    if table is None:
-        district_data = {None: None}
+    data_list = []
 
-    else:
-        district_data = table_parser(table, language)
+    if list_of_tables is not None:
+        for table in list_of_tables:
+            district_data = table_parser(table, language)
+            if list(district_data.keys())[0] is not None:
+                data_list.append(district_data)
 
-    if list(district_data.keys())[0] is None:
+    if len(data_list) == 0:
         print(" No useful information found here, looking somewhere else...")
 
         if (len(languages) > 0) or (len(search_paths[language]) > 0):
-            district_data = scrap_districts_population(city,
-                                                       search_paths,
-                                                       languages)
+            data_list = scrap_districts_population(city,
+                                                   search_paths,
+                                                   languages)
         else:
             sys.exit("Unable to find districts of {}".format(city) +
                      " in Wikipedia database")
 
     if language == "es":
-        district_data = conversion(district_data)
+        for data in data_list:
+            data = conversion(data)
 
-    return district_data
+    return data_list
 
 
 def write_csv(city, district_data, filename="./districts/{}.csv"):
@@ -326,9 +334,10 @@ def write_csv(city, district_data, filename="./districts/{}.csv"):
     with open(filename.format(city), 'w') as f:
         writer = csv.writer(f, delimiter=';')
 
-        for key, value in district_data.items():
-            writer.writerow((key, value["Population"], value["Density"],
-                            value["Area"]))
+        for data in district_data:
+            for key, value in data.items():
+                writer.writerow((key, value["Population"], value["Density"],
+                                value["Area"]))
 
     print("The following csv file was written: " +
           "\'{}\'".format(filename.format(city)))
