@@ -15,37 +15,30 @@
 \usepackage{color}
 \usepackage{smartdiagram}
 \usepackage{subfig}
-\usepackage{csvsimple}
+\usepackage{booktabs}
 
 \author{Martí Municoy, Alba Gordó, Jan-Hendrik Niemann\\ and Andreas Radke}
 \title{Research and Innovation}
 
-\begin{filecontents*}{geojson.csv}
-City;Geojson Source;Geojson concurrs with District csv?;Compatible with Wikipedia scraping?;Reason;Compatible with District Coloring?;Reason
-Berlin;https://github.com/m-hoerz/berlin-shapes;Yes;Yes;-;Yes;-
-Barcelona;https://github.com/martgnz/bcn-geodata/find/master;Yes;Yes;-;Yes;-
-Hamburg;https://matthiassuessen1975.carto.com/tables/bezirke\_in\_hamburg/public/map;Yes;Yes;-;Yes;-
-München;https://mucx.carto.com/tables/osm\_muc\_bezirke/public;Yes;Yes (city name in German: München);-;Yes;-
-Paris;https://github.com/blackmad/neighborhoods/blob/master/gn-paris.geojson;Yes;Yes;-;Yes;-
-New York;https://github.com/blackmad/neighborhoods/blob/master/new-york-city-boroughs.geojson;Yes;Yes (city name is New York City);-;Yes;-
-London;https://joshuaboyd1.carto.com/tables/london\_boroughs\_proper/public;Yes;Yes;-;Yes;-
-Madrid;https://github.com/codeforamerica/click\_that\_hood/blob/master/public/data/madrid-districts.geojson;Yes;Yes;-;Yes;-
-Sydney;http://insideairbnb.com/get-the-data.html;Not yet;No;No available population tables in Wikipedia;No;No available population data
-Brussels;http://insideairbnb.com/get-the-data.html;Yes;Yes;-;Yes;
-Hong Kong;http://insideairbnb.com/get-the-data.html;Yes;Yes;-;Yes;
-Vancouver;http://insideairbnb.com/get-the-data.html;Not yet;Yes (city name is British Columbia);-;?;
-San Francisco;http://insideairbnb.com/get-the-data.html;No district information;No;No available population tables in Wikipedia;No;No available population data
-Palo Alto;http://insideairbnb.com/get-the-data.html;No district information;No;No available population tables in Wikipedia;No;No available population data
-Chicago;http://insideairbnb.com/get-the-data.html;No district information;No;No available population tables in Wikipedia;No;No available population data
-Los Angeles;http://insideairbnb.com/get-the-data.html;No district information;No;No available population tables in Wikipedia;No;No available population data
-\end{filecontents*}
-
-\begin{filecontents*}{scientists.csv}
-	name,surname,age
-	Albert,Einstein,133
-	Marie,Curie,145
-	Thomas,Edison,165
-\end{filecontents*}
+%\begin{filecontents*}{geojson.csv}
+%City;Geojson Source
+%Berlin;https://github.com/m-hoerz/berlin-shapes
+%Barcelona;https://github.com/martgnz/bcn-geodata/find/master
+%Hamburg;https://matthiassuessen1975.carto.com/tables/bezirke\_in\_hamburg/public/map
+%München;https://mucx.carto.com/tables/osm\_muc\_bezirke/public
+%Paris;https://github.com/blackmad/neighborhoods/blob/master/gn-paris.geojson
+%New York;https://github.com/blackmad/neighborhoods/blob/master/new-york-city-boroughs.geojson
+%London;https://joshuaboyd1.carto.com/tables/london\_boroughs\_proper/public
+%Madrid;https://github.com/codeforamerica/click\_that\_hood/blob/master/public/data/madrid-districts.geojson
+%Sydney;http://insideairbnb.com/get-the-data.html
+%Brussels;http://insideairbnb.com/get-the-data.html
+%Hong Kong;http://insideairbnb.com/get-the-data.html
+%Vancouver;http://insideairbnb.com/get-the-data.html
+%San Francisco;http://insideairbnb.com/get-the-data.html
+%Palo Alto;http://insideairbnb.com/get-the-data.html
+%Chicago;http://insideairbnb.com/get-the-data.html
+%Los Angeles;http://insideairbnb.com/get-the-data.html
+%\end{filecontents*}
 
 \begin{document}
 	\maketitle
