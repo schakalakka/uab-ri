@@ -16,7 +16,7 @@ for city in city_list:
         activities_per_category[city][category_name] = max(0.000000000000000000000000000000000000000001, len(
             mapping.read_custom_csv('../csv/{}.csv'.format(city), {category_id: category_name})[0]))
         activities_per_category[city]['all'] = \
-        mapping.read_custom_csv('../csv/{}.csv'.format(city), {category_id: category_name})[1] or 0
+            mapping.read_custom_csv('../csv/{}.csv'.format(city), {category_id: category_name})[1] or 0
 
 print(activities_per_category)
 
@@ -30,6 +30,23 @@ def plot(data, city, categories=None):
     barchart.render_to_png('plot.png')
 
 
+def plot_categories_for_city(data, city, per_capita=False):
+    barchart = pygal.HorizontalBar(legend_at_bottom=True, print_values=False, print_labels=True, print_zeros=True)
+    barchart.title = f'Number of Open Events per Million Capita in {city}' if per_capita else f'Number of Open Events in {city}'
+    inhabitants = 1
+    for category in category_names:
+        if per_capita:
+            inhabitants = population_density_dict[city] / 1000000
+        if data[city][category]:
+            barchart.add(category, data[city][category] / float(inhabitants))
+    # barchart.render_in_browser()
+
+    infix = '_per_capita' if per_capita else ''
+
+    barchart.render_to_png(f'pngs/categories{infix}/{city}.png')
+    barchart.render_to_file(f'svgs/categories{infix}/{city}.svg')
+
+
 def plot_all_cities(data, citylist=None, category=None, per_capita=False):
     barchart = pygal.HorizontalBar(print_values=False, print_labels=True, print_zeros=True)
     if category is None:
@@ -40,9 +57,9 @@ def plot_all_cities(data, citylist=None, category=None, per_capita=False):
     inhabitants = 1
     for city in citylist:
         if per_capita:
-            inhabitants = population_density_dict[city]
+            inhabitants = population_density_dict[city] / 1000000
         if data[city][category]:
-            barchart.add(city, data[city][category]*1000000 / float(inhabitants))
+            barchart.add(city, data[city][category] / float(inhabitants))
     # barchart.render_in_browser()
 
     infix = '_per_capita' if per_capita else ''
@@ -53,9 +70,13 @@ def plot_all_cities(data, citylist=None, category=None, per_capita=False):
 
 # plot(activities_per_category, 'Berlin', category_names)
 
-plot_all_cities(activities_per_category, citylist=city_list, per_capita=False)
-plot_all_cities(activities_per_category, citylist=city_list, per_capita=True)
+# plot_all_cities(activities_per_category, citylist=city_list, per_capita=False)
+# plot_all_cities(activities_per_category, citylist=city_list, per_capita=True)
+#
+# for category_name in category_names:
+#     plot_all_cities(activities_per_category, category=category_name, citylist=city_list, per_capita=False)
+#     plot_all_cities(activities_per_category, category=category_name, citylist=city_list, per_capita=True)
 
-for category_name in category_names:
-    plot_all_cities(activities_per_category, category=category_name, citylist=city_list, per_capita=False)
-    plot_all_cities(activities_per_category, category=category_name, citylist=city_list, per_capita=True)
+for city in city_list:
+    plot_categories_for_city(activities_per_category, city, per_capita=False)
+    plot_categories_for_city(activities_per_category, city, per_capita=True)
