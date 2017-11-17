@@ -3,10 +3,10 @@
 The main work for our project is done in the Python programming language in version 3.6 \cite{python}. This programming language is used to develop different packages. Each package is in charge of managing a specific dataset and it does a certain job. In this section, we are going to introduce the most important packages that we have developed and used to retrieve the data of this project.
 
 \subsection{Meetup Package}
-This package has the main purpose of retrieve the information of all the available events in a city. Its main module is called \textit{mu\_requests.py}. This module makes use of the \textit{Python 3.6 Requests} package to submit queries to Meetup. It is able to get information about all the available categories and events. Then, it can also parse the data coming from the Meetup client, whose format is expressed in JSON, and it can store it in a local drive by writing a custom csv file. For instance, all the events found in a city they are written in this way \textit{./csv/name\_of\_the\_city.csv}. This custom csv-file contains all the events of a city arranged by category.
+This package has the main purpose of retrieve the information of all the available events in a city. Its main module is called \textit{mu\_requests.py}. This module makes use of the \textit{Python 3.6 Requests} package \cite{requests} to submit queries to the Meetup API \cite{meetupapi}. It is able to get information about all the available categories and events. Then, it can also parse the data coming from the Meetup client, whose format is expressed in JSON, and it can store it in a local drive by writing a custom csv file. For instance, all the events found in a city they are written in this way \textit{./csv/name\_of\_the\_city.csv}. This custom csv-file contains all the events of a city arranged by category.
 
 \subsection{Mapping Package}
-This is the package responsible of plotting all the located events on a map. To do this, first, it needs to read all the events data from the previous csv-file. Then, it uses the read coordinates to display events on a \emph{Google Maps} map. This functionality uses the \textit{gmaps} library along with a \textit{Jupyter notebook} which allow us to display data on a map.
+This is the package responsible of plotting all the located events on a map. To do this, first, it needs to read all the events data from the previous csv-file. Then, it uses the read coordinates to display events on a \emph{Google Maps} map. This functionality uses the \textit{gmaps} library \cite{gmaps} along with a \textit{Jupyter notebook} \cite{jupyter} which allow us to display data on a map.
 
 It has some tools that allows us manage which events we want to display. For example it allows us to plot only those events that are scheduled in a certain time range or those events which belong to a specific category. We can also control the way the script colors the event marks or their opacity.
 
@@ -30,5 +30,5 @@ As already noted we used the data sources that are summarized below:
 \item Meetup API: To get the events in the examined cities. 
 \item Wikipedia: For obtaining data about the population density of the cities and their districts. 
 \item GeoJSON Files: To visualize districts onto Google Maps. Files are obtained from various resources. For the detailed sources see Appendix \ref{subsec:geojson}.
-\item Google Maps: As a general back-end for our visualization.  
+\item Google Maps: As a general back-end for our visualization \cite{googlemaps}.
 \end{itemize}
