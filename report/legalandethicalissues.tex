@@ -1,15 +1,14 @@
 \section{Legal and Ethical Issues}\label{sec:legalandethicalissues}
 
 
-The privacy policy of a work must be at least as protective of the information as the most restrictive of the sources used. As a matter of fact, all the data sources used along the work need to be taken into account in the study of its legal and ethical issues.
-
-The issues related with data protection copyright and intellectual property legislation can be very tedious, specially if the source is a private company. To enhance the understanding, and even though some of the sources do not present copyright-licenses of this type, the icons used and released by the non-profit organisation Creative Commons will be used in this section. The Creative Commons licenses  require attribution for copying, sharing and verbatim uses but there are other restrictions that may apply (see Table \ref{table_5}).
+A work must respect the protection of the information of its sources. Hence, all the data sources used along the work need to be taken into account in the study of its legal and ethical issues. But those issues related with data protection copyright and intellectual property legislation can be very tedious, specially if the source is a private company. To enhance the understanding, and even though some of the sources do not present copyright-licenses of this type, the icons used and released by the non-profit organisation Creative Commons will be used in this section. The Creative Commons licenses  require attribution for copying, sharing and verbatim uses but there are other restrictions that may apply (see Table \ref{table_5}).
 
 \begin{table}[]
 \centering
-\caption{ The four types of restrictions that may apply to a Creative Common license.}
+\caption{The five types of restrictions that may apply to a Creative Common license.}
 \label{table_5}
-\begin{tabular}{ p{1cm} p{1cm} p{10cm}}
+\begin{tabular}{p{1cm} p{1cm} p{10cm}}
+\hline
     \begin{minipage}{.1\textwidth}
       \includegraphics[scale=.07]{images/cc_by.png}
     \end{minipage} & \textbf{BY} & \textbf{Attribution} - credit to the creator is required                                                                                                             
@@ -24,27 +23,53 @@ The issues related with data protection copyright and intellectual property legi
  \begin{minipage}{.1\textwidth}
       \includegraphics[scale=.07]{images/cc_nc.png}
     \end{minipage} & \textbf{NC} & \textbf{Non-commercial} - commercial use of the work is not permitted                                                                                               
+    \\
+ \begin{minipage}{.1\textwidth}
+      \includegraphics[scale=.07]{images/cc_0.png}
+    \end{minipage} & \textbf{NC} & \textbf{Public domain} - free for use by anyone for any purpose without restriction under copyright law \\
+   \hline
 \end{tabular}
 \end{table}
 
 \subsection{Meetup API}
 
-The information regarding the use that can be done with any information extracted from the Meetup API is detailed in 5.8 \textit{API License} of the \textit{Terms of Service} section and expanded in the some other sections to which a link is attached. The introduction of the subsection is attached as follows. From this paragraph (and from the rest of the section), it is clear that restrictions \textbf{BY}, \textbf{SA}, \textbf{ND} apply.
-
-\vspace{0.5cm}
-"Meetup grants to you a limited, non-exclusive, non-transferable, non-sublicensable, revocable license to use the Meetup application programming interface, including data or other Content made available via the Meetup API, (...) solely to facilitate the development of event and group related applications using Platform data and developer tools."
-\vspace{0.5cm}
-
-Notice however that commercial use of the work is not said to be prohibited. Section \textit{Meetup API License Guidelines} details what kind of applications and under what conditions (i.e., "enhance the Meetup experience or create specialized versions") the commercial use of the information provided by this platform is allowed. Not surprisingly, though, the conditions given already restrict a lot the possibility of making any commercial use of the data, so restriction \textbf{NC} could almost be added to the restrictions list too.
+The information regarding the use that can be done with any information extracted from the Meetup API is detailed in section 5.8 \textit{API License} of the \textit{Terms of Service} of Meetup, though some other relevant information is linked to other subsections. In this section it is explained that the restrictions \textbf{BY}, \textbf{SA}, \textbf{ND} apply for any further application of the API. Notice however that commercial use of the work is not said to be prohibited. Section \textit{Meetup API License Guidelines} details what kind of applications and conditions under which the commercial use of the information provided by the platform is allowed: "(...)enhance the Meetup experience or create specialized versions of our platform (...)" This conditions of "Reasonable commercial uses" already restrict a lot the possibility of making any commercial use of the data, so restriction \textbf{NC} could almost be added to the restrictions list too.
 
 \subsection{Google Maps API}
 
-The restrictions in the use of this API are considerably more complicated than the ones in the Meetup case, and are spread out in sections 6 to 12 of the \textit{Google Maps/Google Earth APIs Terms of Service}. The summary of restrictions is found in section 8.2, \textit{Service License}, where it is made clear that the license to use the Service is non-sublicensable. A part from some restrictions, section 9.1 \textit{.1 Free, Public Accessibility to Your Maps API Implementation.} specifies the terms under which a commercial use of the Service would be allowed. Attribution and non derivatives restrictions are also specified in sections 9.4 and 10.5 respectively, so the whole set of restrictions is finally  \textbf{BY}, \textbf{SA}, \textbf{ND} and \textbf{NC} in some cases.
+The terms in which the use of this API is restricted are spread out along sections 6 to 12 of the \textit{Google Maps/Google Earth APIs Terms of Service}. The summary of restrictions is found in section 8.2, \textit{Service License}, where it is made clear that the license to use the Service is non-sublicensable. Section 9.1 \textit{.1 Free, Public Accessibility to Your Maps API Implementation.} specifies the terms under which a commercial use of the Service would be allowed, while attribution and non derivatives restrictions are also specified in sections 9.4 and 10.5 respectively. All in all, the set of restrictions is finally  \textbf{BY}, \textbf{SA}, \textbf{ND} and \textbf{NC} in some cases.
 
 \subsection{Different sources of \textit{.geoJSON} files}
 
+Since the .geoJSON documents where extracted from different sources, the restrictions of each map (i.e., of each city) need to be discussed individually. 
 
+\begin{table}[h]
+\centering
+\caption{Legal protection of the data regarding the distribution of the districts in the studied cities.}
+\label{table_5.2}
+\begin{tabular}{p{2cm} p{8cm} p{2cm}}
+\hline
+City      & Source of data                                                              & License                     \\
+\hline
+Barcelona & https://github.com/martgnz/bcn-geodata/blob/master/                         & CC-BY                       \\
+London    & https://joshuaboyd1.carto.com/                                              & BY                          \\
+Berlin    & https://github.com/m-hoerz/berlin-shapes                                    & CC-BY                     \\
+Madrid    & https://github.com/codeforamerica/ click$\backslash \_$that$\backslash$\_ hood/tree/master/public/data & -               \\
+Paris     & https://github.com/blackmad/neighborhoods /blob/master/                      & -               \\
+Brussels  & http://insideairbnb.com                                                     & CC0     \\
+Hamburg   & https://matthiassuessen1975.carto.com/                                      & BY                          \\
+New York  & https://github.com/blackmad/neighborhoods /blob/master/                      & -              \\
+Munich    & https://mucx.carto.com/                                                     & BY                          \\
+Hong Kong & http://insideairbnb.com                                                     & CC0 \\
+\hline
+\end{tabular}
+\end{table}
+  
 
 \subsection{Wikipedia}
 
-As explained in the \textit{Terms} section of Wikimedia, the contents of this platform are only restricted by \textbf{BY} and \textbf{SA}.
+As explained in the \textit{Terms} section of Wikimedia, the contents of this platform are only restricted by \textbf{BY} and \textbf{SA}, though exceptions exist for content contributed under "fair use".
+
+\vspace{.75cm}
+
+From all the sources of data, we observe that the one providing from the Meetup and Google Maps APIs is the most protected. The data obtained from this sources needs to be treated very carefully, since legal issues may arise easily. On the other hand, the data extracted from Airbnb is completely free to use, even though Airbnb itself is a very powerful company. We found this very interesting. 
