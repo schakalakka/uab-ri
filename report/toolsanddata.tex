@@ -1,28 +1,28 @@
 \section{Data Tools}\label{sec:toolsanddata}
-\subsection{Python Packages} 
+\subsection*{Python Packages} 
 The main work for our project is done in the Python programming language in version 3.6 \cite{python}. This programming language is used to develop different packages. Each package is in charge of managing a specific dataset and it does a certain job. In this section, we are going to introduce the most important packages that we have developed and used to retrieve the data of this project.
 
-\subsection{Meetup Package}
+\subsection*{Meetup Package}
 This package has the main purpose of retrieve the information of all the available events in a city. Its main module is called \textit{mu\_requests.py}. This module makes use of the \textit{Python 3.6 Requests} package \cite{requests} to submit queries to the Meetup API \cite{meetupapi}. It is able to get information about all the available categories and events. Then, it can also parse the data coming from the Meetup client, whose format is expressed in JSON, and it can store it in a local drive by writing a custom csv file. For instance, all the events found in a city they are written in this way \textit{./csv/name\_of\_the\_city.csv}. This custom csv-file contains all the events of a city arranged by category.
 
-\subsection{Mapping Package}
+\subsection*{Mapping Package}
 This is the package responsible of plotting all the located events on a map. To do this, first, it needs to read all the events data from the previous csv-file. Then, it uses the read coordinates to display events on a \emph{Google Maps} map. This functionality uses the \textit{gmaps} library \cite{gmaps} along with a \textit{Jupyter notebook} \cite{jupyter} which allow us to display data on a map.
 
 It has some tools that allows us manage which events we want to display. For example it allows us to plot only those events that are scheduled in a certain time range or those events which belong to a specific category. We can also control the way the script colors the event marks or their opacity.
 
 Another interesting tool that this package offers is to plot the districts of a city. In this case, \emph{GeoJSON}-files with the delimiting points for each district are required. If you want to plot them according to their population, population data for each district is also required. The script reads these files, parses the data and it can plot and paint the districts according to the number of events per capita that each district has.
 
-\subsection{Scraping Package}
+\subsection*{Scraping Package}
 This package is involved on retrieving data from \url{Wikipedia.org}. Particularly, it searches for the pages belonging to the districts of a city to retrieve information about their population from one of their tables. This process is known as web scraping. To check for the appropriate tables, it uses \textit{BeautifulSoup} Package that is an \emph{HTML} parser.
 
 Then, the script is designed to look for these tables in an intelligent way.  So it is able to check different Wikipedia addresses to get the right information.  Firstly, it looks for the English articles but, in some cases, best articles are written in other languages rather than English. So it is also able to check pages written in Spanish and German.
 
 Once it gets the right population table it comes to the hardest part. It needs to move around the table to look for the proper cells. The functions that are used in the parsing process are able to work with tables, words and numbers expressed in different formats. For instance it supports tables with joined cells or which arrange their information in different ways.
 
-\subsection{Plotting Package}
+\subsection*{Plotting Package}
 The last developed Package is used to plot data from all these retrieved events. It is useful to view and compare the amount of events for each category or city. This script makes use of \textit{pygal package} \cite{pygal} to create mostly bar charts. 
 
-\subsection{Data}
+\subsection*{Data}
 
 As already noted we used the data sources that are summarized below:
 
