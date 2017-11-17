@@ -119,6 +119,10 @@ Hamburg is the second biggest city in Germany. As in Berlin mostly tech-interest
 
 \subsection*{New York City}
 
+The biggest city of the United States of America has the second largest amount of open events in our dataset. Here it is necessary to keep in mind that the real number of events can vary if the Meetup communities are more organized in closed groups. 
+
+The picture New York shows is as one would expect. At least in the case for Manhattan which is by far \emph{the} center of the City with over 1000 open events. It is followed by the distant second Brooklyn less than one third of activities. Staten Island and the Bronx are hardly active. 
+
 \begin{figure}[!htp]
 	% Maximum length
 	\subfloat[Activity per District]{\label{fig1:a}\includegraphics[width=0.49\linewidth]{images/activities_of_districts/NewYork.png}}\hfill
@@ -126,7 +130,11 @@ Hamburg is the second biggest city in Germany. As in Berlin mostly tech-interest
 	\caption{New York City}\label{fig:newyorkmap}
 \end{figure}
 
+As \emph{Meetup Inc.} is based in New York it shows a diverse picture in regards to categories. The leading categories are Sports and Recreation, Tech, Career and Business and Socializing. 
+
 \subsection*{Munich}
+
+As the third German city in our set Munich does not seem to be much different than Berlin and Hamburg. Again most Meetup members are interested in Technology. In total number of activities Munich beats the more populated Hamburg and even Berlin if one considers activities per inhabitant. 
 
 \begin{figure}[!htp]
 	% Maximum length
@@ -137,9 +145,18 @@ Hamburg is the second biggest city in Germany. As in Berlin mostly tech-interest
 
 \subsection*{Hong Kong}
 
+The first thing we notice is that Hong Kong has the lowest number of activities per capita in our dataset (compare Figure \ref{fig:categories_all_percapita}). It seems that \url{Meetup.com} did not reach Hong Kong and maybe the whole Chinese or even Asian market. 
+As a business center it shows the largest activity in Socializing and Career and Business followed by Sports and Recreation. 
+
 \begin{figure}[!htp]
 	% Maximum length
 	\subfloat[Activity per District]{\label{fig1:a}\includegraphics[width=0.49\linewidth]{images/activities_of_districts/HongKong.png}}\hfill
 	\subfloat[Activity per Capita per District]{\label{fig1:b}\includegraphics[width=0.49\linewidth]{images/activities_per_capita_of_districts/HongKong.png}}%
 	\caption{Hong Kong}\label{fig:hongkongmap}
+\end{figure}
+
+
+\begin{figure}[!htp]
+	\includegraphics[width=1\linewidth]{../plotting/pngs/activities_per_city_per_capita/all.png}
+	\caption{Number of Open Events in all Categories per Capita}\label{fig:categories_all_percapita}	
 \end{figure}
